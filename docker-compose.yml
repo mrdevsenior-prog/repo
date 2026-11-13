@@ -22,6 +22,11 @@ services:
       MONGODB_URI: mongodb://mongodb:27017/lineage_audit_demo?retryWrites=false&serverSelectionTimeoutMS=3000
       MONGODB_DATABASE: lineage_audit_demo
       MONGODB_COLLECTION: tapp_audit_events
+      AUDIT_API_URL: ${AUDIT_API_URL:-http://host.docker.internal:8181/api/v1/audit/security/log}
+      AUDIT_API_CONNECT_TIMEOUT: ${AUDIT_API_CONNECT_TIMEOUT:-3s}
+      AUDIT_API_READ_TIMEOUT: ${AUDIT_API_READ_TIMEOUT:-10s}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       mongodb:
         condition: service_healthy

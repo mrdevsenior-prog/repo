@@ -1,0 +1,18 @@
+### El monolito recibe la petición en 8080 y consume el producer de AUDIT_API_URL
+POST http://localhost:8080/api/v1/audit/security/log
+x-api-version: apiversion
+x-channel-id: channel
+x-originating-appl-code: originating
+x-country-code: country
+Content-Type: application/json
+
+< ./audit-request.json
+
+### Conexión real con MongoDB
+GET http://localhost:8080/api/v1/audit/health
+
+### Consultar eventos
+GET http://localhost:8080/api/v1/audit/events?application=TAPP&page=0&size=10
+
+### Estadísticas para el dashboard
+GET http://localhost:8080/api/v1/audit/analytics

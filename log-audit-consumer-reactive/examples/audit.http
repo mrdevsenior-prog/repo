@@ -1,0 +1,12 @@
+### El microservicio recibe la petición en 8080 y consume la API en 8181
+POST http://localhost:8080/api/v1/audit/security/log
+x-api-version: apiversion
+x-channel-id: channel
+x-originating-appl-code: originating
+x-country-code: country
+Content-Type: application/json
+
+< ./audit-request.json
+
+### Salud del microservicio consumidor
+GET http://localhost:8080/actuator/health

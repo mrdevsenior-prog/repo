@@ -220,7 +220,7 @@ class MongoApiIntegrationTest {
   }
 
   @Test
-  void exposesNoWriteOperation() throws Exception {
+  void queryEndpointsRemainReadOnly() throws Exception {
     HttpResponse<String> response = http.send(HttpRequest.newBuilder(URI.create(base() + "/api/v1/audit/events"))
         .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString("{}")).build(), HttpResponse.BodyHandlers.ofString());
     assertEquals(405, response.statusCode());

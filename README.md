@@ -1,11 +1,13 @@
-# Audit Query Monolith
+# Audit Monolith: Log Audit y dashboard MongoDB
 
-Consulta de los eventos que la POC de auditoría almacena en MongoDB. Angular y Angular Material se empaquetan dentro del JAR de Spring Boot: una aplicación, un puerto y un despliegue. El navegador consume `/api/v1/audit`; las credenciales MongoDB permanecen en el backend.
+Envío de eventos a la API del producer Log Audit y consulta de los eventos que la POC almacena en MongoDB. Angular, Angular Material, el API de consulta y el envío se empaquetan dentro del mismo JAR de Spring Boot: una aplicación, un puerto y un despliegue. El navegador consume `/api/v1/audit`; la conexión MongoDB y la URL del producer se configuran en el backend.
 
 Versiones estables verificadas en npm el 13 de noviembre de 2026: Angular **22.2.6**, Angular Material/CDK **22.2.7**, CLI/build **22.2.7** y TypeScript **6.0.x**, fijadas mediante `package-lock.json`. Backend: Java **25**, Spring Boot **4.0.9** y Gradle Wrapper **9.1.0**, siguiendo la POC existente.
 
 ## Funcionalidad
 
+- `POST /api/v1/audit/security/log`: envía el evento completo al producer configurado en `AUDIT_API_URL`, reutilizando la POC reactiva con WebClient, MapStruct, dominio y puertos hexagonales.
+- Conserva las cuatro cabeceras, los veinte detalles del ejemplo, las fechas con su zona y los campos dinámicos de `channel_payload_header`. Incluye validación, timeouts, manejo de rechazos y ausencia de reintentos o redirecciones del POST.
 - Consulta de `lineage_audit.tapp_audit_events`, configurable por entorno.
 - Búsqueda literal, sin distinguir mayúsculas, en UID, usuario, sesión, operación, documento y cuenta BT.
 - Filtros combinados por aplicación, prioridad e intervalo `[desde, hasta)`.
@@ -24,7 +26,9 @@ Versiones estables verificadas en npm el 13 de noviembre de 2026: Angular **22.2
 - Estados de carga, error, lista vacía y conexión. Filtros conservados en la URL.
 - Interfaz adaptable, accesible por teclado, con tabla, formularios, selección, diálogo, pestañas y paginador de Angular Material.
 
-La aplicación es de solo lectura. No contiene POST al producer ni consume Kafka; los eventos siguen entrando por el flujo existente. No crea índices, colecciones ni datos al iniciar. No activa TTL ni cambia la retención del consumer.
+El dashboard y los endpoints de consulta son de solo lectura sobre MongoDB. El endpoint de envío hace POST al producer; no inserta directamente en MongoDB ni consume Kafka. La persistencia continúa por el flujo existente del producer y el consumer, por lo que un envío exitoso puede tardar en aparecer en el dashboard. La aplicación no crea índices, colecciones ni datos al iniciar, ni cambia TTL o retención.
+
+La POC de envío se conserva en `log-audit-consumer-reactive/`, con sus pruebas unitarias, de integración, de arquitectura, Checkstyle, PMD, ejemplos y Postman. El monolito reutiliza su caso de uso y cliente WebClient mediante un adaptador MVC que devuelve `Mono`; no ejecuta un segundo servidor. La POC también se puede iniciar por separado como aplicación WebFlux/Netty.
 
 ## Compilar y ejecutar con tu MongoDB
 
@@ -41,13 +45,16 @@ $env:MONGODB_URI = 'mongodb://localhost:27017/lineage_audit?retryWrites=false&se
 $env:MONGODB_DATABASE = 'lineage_audit'
 $env:MONGODB_COLLECTION = 'tapp_audit_events'
 
+# API destino del producer; usa su URL real en tu entorno.
+$env:AUDIT_API_URL = 'http://localhost:8181/api/v1/audit/security/log'
+
 .\gradlew.bat build
 java -jar build/libs/audit-query-monolith-1.0.0.jar
 ```
 
 Abre **http://localhost:8080**. Gradle ejecuta `npm ci`, compila Angular y copia sus archivos al JAR. En Linux/macOS utiliza `./gradlew` y la sintaxis de variables de tu shell. `npmExecutable` permite seleccionar otro ejecutable npm: `-PnpmExecutable=/ruta/a/npm`.
 
-El JAR ya compilado requiere únicamente Java 25 y acceso a MongoDB; Node y Gradle se utilizan al compilar. `.env.example` documenta las variables, pero Spring Boot no carga archivos `.env` automáticamente.
+El JAR ya compilado requiere Java 25 y acceso a MongoDB para las consultas, y acceso al producer para los envíos; Node y Gradle se utilizan al compilar. `.env.example` documenta las variables, pero Spring Boot no carga archivos `.env` automáticamente.
 
 El repositorio contiene el código fuente del frontend y del backend. Tras compilar con `build`, ejecuta el JAR generado:
 
@@ -56,6 +63,28 @@ java -jar build/libs/audit-query-monolith-1.0.0.jar
 ```
 
 Para MongoDB autenticado, establece `MONGODB_URI` en el entorno de ejecución y utiliza una cuenta con rol `read` sobre la base elegida. `MONGODB_DATABASE` debe indicar explícitamente la base correspondiente. No incluyas credenciales en Angular ni en el repositorio. En producción integra la autenticación corporativa en el backend o en el gateway antes de ampliar el acceso; la POC escucha en loopback por defecto.
+
+## Enviar Log Audit al producer
+
+Importa `postman/LogAuditConsumer.postman_collection.json` y `postman/LogAuditConsumer-Local.postman_environment.json`, y selecciona **Audit Monolith - Local 8080**. La colección incluye el POST original con sus veinte detalles y los GET de consulta, detalle y estadísticas.
+
+También puedes enviar el ejemplo desde PowerShell:
+
+```powershell
+curl.exe --request POST "http://localhost:8080/api/v1/audit/security/log" --header "x-api-version: apiversion" --header "x-channel-id: channel" --header "x-originating-appl-code: originating" --header "x-country-code: country" --header "Content-Type: application/json" --data-binary "@examples/audit-request.json"
+```
+
+Sustituye las cabeceras y los valores de muestra por los admitidos en tu API. Las IP del ejemplo original no son IPv4 válidas. `AUDIT_API_URL` configura el destino del backend; cambiar `base_url` de Postman solo cambia la aplicación que recibe la petición.
+
+| Variable | Predeterminado |
+| --- | --- |
+| `AUDIT_API_URL` | `http://localhost:8181/api/v1/audit/security/log` |
+| `AUDIT_API_CONNECT_TIMEOUT` | `3s` |
+| `AUDIT_API_READ_TIMEOUT` | `10s` |
+
+El cliente limita las respuestas a 256 KiB. Conserva los HTTP 2xx con respuesta válida y los rechazos 4xx del producer; transforma errores 5xx, redirecciones y respuestas incompatibles en 502, fallos de conexión en 503 y timeouts en 504. Los rechazos incluyen `upstream_status`, sin divulgar el cuerpo del error del proveedor. No hay envíos automáticos al iniciar ni al consultar el dashboard.
+
+Para usar únicamente la POC WebFlux original, abre `log-audit-consumer-reactive/` y ejecuta su Wrapper con `SERVER_PORT=8081` si el monolito ya utiliza 8080. No es necesario iniciarla por separado para usar el POST del monolito.
 
 ## Desarrollo de la interfaz
 
@@ -106,10 +135,13 @@ $env:MONGODB_DATABASE = 'lineage_audit_demo'
 
 El contenedor de la aplicación ejecuta un solo JAR con un usuario sin privilegios. MongoDB es la dependencia de datos, no un segundo backend.
 
-## API de consulta
+Dentro de Compose, el destino predeterminado del producer es `http://host.docker.internal:8181/api/v1/audit/security/log`. Puedes cambiarlo mediante `AUDIT_API_URL` antes de iniciar Compose. El producer existente debe estar disponible para enviar; Compose no lo simula ni lo despliega.
+
+## API de envío y consulta
 
 | Método y ruta | Resultado |
 | --- | --- |
+| `POST /api/v1/audit/security/log` | Envía el evento al producer mediante WebClient |
 | `GET /api/v1/audit/health` | Ping real a MongoDB: 200 o 503 |
 | `GET /api/v1/audit/events` | Página de eventos |
 | `GET /api/v1/audit/events/{uid}` | Documento completo; 404 si no existe |
@@ -144,14 +176,18 @@ $env:MONGODB_TEST_URI = 'mongodb://localhost:27017/?serverSelectionTimeoutMS=300
 .\gradlew.bat test --rerun-tasks
 ```
 
-La suite crea una base temporal `audit_query_test_<UUID>`, carga documentos sintéticos y prueba filtros, fechas, orden, paginación, resumen, estadísticas, detalle dinámico, catálogos, errores y servicio de Angular; finalmente elimina solo su propia base. Las estadísticas se comprueban sobre el conjunto completo y con filtros combinados, agrupación horaria de Lima, categorías ausentes y fechas inválidas. La conexión de test necesita permiso para crear y borrar esa base temporal. Si `MONGODB_TEST_URI` no está definida, esas pruebas se omiten explícitamente. Reporte: `build/reports/tests/test/index.html`.
+La suite MongoDB crea una base temporal `audit_query_test_<UUID>`, carga documentos sintéticos y prueba filtros, fechas, orden, paginación, resumen, estadísticas, detalle dinámico, catálogos, errores y servicio de Angular; finalmente elimina solo su propia base. Las estadísticas se comprueban sobre el conjunto completo y con filtros combinados, agrupación horaria de Lima, categorías ausentes y fechas inválidas. La conexión de test necesita permiso para crear y borrar esa base temporal. Si `MONGODB_TEST_URI` no está definida, esas pruebas se omiten explícitamente. Reporte: `build/reports/tests/test/index.html`.
+
+Las 34 pruebas de integración del POST en el monolito usan un producer HTTP simulado en un puerto aleatorio, sin enviar datos a una API real. Comprueban JSON completo, veinte detalles, cabeceras, fechas, validación, estados HTTP, fallos de conexión y timeouts. `build` ejecuta además las 270 pruebas y los análisis Checkstyle y PMD de la POC recuperada; su reporte queda en `log-audit-consumer-reactive/build/reports/tests/test/index.html`.
 
 La compilación de producción de Angular verifica TypeScript y las plantillas con modo estricto. La UI no utiliza datos de ejemplo como sustituto silencioso de una conexión fallida.
 
 ### Verificación realizada en esta entrega
 
 - `build` completo: instalación reproducible, compilación de Angular y empaquetado del JAR correctos.
-- 24 ejecuciones de prueba: 7 de dominio y 17 HTTP contra MongoDB 8.0 real, sin fallos ni omisiones. Se utilizó una instancia de prueba en el puerto 27028, separada del MongoDB existente en 27017.
+- Consulta: 7 pruebas de dominio y 17 HTTP contra MongoDB 8.0 real. Se utiliza una instancia de prueba en el puerto 27028, separada del MongoDB existente en 27017.
+- Envío: 34 pruebas HTTP de integración del POST en el monolito y 270 de la POC WebFlux reutilizada, además de Checkstyle y PMD. En total, 328 pruebas sin fallos ni omisiones.
+- JAR empaquetado: Angular, conexión MongoDB, estadísticas y detalle comprobados junto con un POST a un producer simulado. Se conservaron el HTTP 202, los veinte detalles y las cuatro cabeceras, y el POST no escribió directamente en MongoDB.
 - Navegador: consulta por aplicación, detalle, payload dinámico, resultados vacíos, paginación, filtro de hoy y descarga JSON comprobados. Sin errores de JavaScript durante estas comprobaciones.
 - Dashboard: gráficos por aplicación, prioridad y día comprobados en el navegador, incluidos filtros combinados. La exportación de estadísticas conserva el total y las sumas de las series de los 36 eventos sintéticos.
 - Detalle: botón textual y apertura con teclado comprobados, con una sola ventana por activación. Los seis campos del formulario son de solo lectura y las cuatro filas de la tabla coinciden con la lista del documento JSON sintético.
@@ -162,10 +198,13 @@ La compilación de producción de Angular verifica TypeScript y las plantillas c
 
 ```text
 frontend/                          Angular standalone + Material + signals
+log-audit-consumer-reactive/        POC de envío recuperada y reutilizada como módulo
+examples/                          JSON original y cliente HTTP del POST
+postman/                           Envío, consulta, detalle y estadísticas
 src/main/java/.../domain/           Modelos y puerto de consulta, Java puro
 src/main/java/.../application/      Caso de uso, Java puro
 src/main/java/.../adapter/mongo/    Lectura MongoDB y conversión BSON
-src/main/java/.../adapter/web/      Controlador REST y errores
+src/main/java/.../adapter/web/      Controladores REST de consulta y envío, y errores
 src/main/java/.../config/           Cableado y reloj
 src/demo/java/                     Carga sintética separada
 src/test/java/                     Pruebas de dominio e integración
@@ -176,4 +215,5 @@ src/test/java/                     Pruebas de dominio e integración
 - [Compatibilidad de Angular](https://angular.dev/reference/versions).
 - [Angular Material](https://material.angular.dev/).
 - [MongoDB con Spring Boot 4.0](https://docs.spring.io/spring-boot/4.0/reference/data/nosql.html#data.nosql.mongodb).
+- [Respuestas reactivas en Spring MVC](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-methods/return-types.html).
 - Contrato de referencia en la POC original, externa a este repositorio: `bjf7-lineage-consumer/src/test/resources/mongo/expected-tapp-document.json`.

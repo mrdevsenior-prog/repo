@@ -1,0 +1,53 @@
+{
+  "log_timestamp": "2026-07-09T15:19:59-05:00",
+  "event_log_classification": "AUDIT_LOG",
+  "event_timestamp": "2026-07-09T15:19:58-05:00",
+  "event_type": "FATAL",
+  "event_priority": "MEDIUM",
+  "event_category": "SUSPENDED",
+  "account_name": "Campo nombre de la cuenta",
+  "source_host_name": "Campo source host name",
+  "source_ip_address": "888.888.888.888",
+  "destination_host_name": "Campo destination host name",
+  "destination_ip_address": "999.999.999.999",
+  "session_identifier": "Campo session identifier",
+  "audit_action": "ENUMERATE",
+  "event_message": {
+    "app_code": "TAPP",
+    "app_description": "Telebanking 504",
+    "app_operation_code": "B3QXRCR",
+    "app_operation_description": "Registro de credenciales exitosamente :D",
+    "type_id": "DNI",
+    "number_id": "33445566",
+    "device_id": "Campo device id",
+    "operation_number": "Campo operation number",
+    "cams_id": "campo-cams-id-7dec-11d0-a765-00a0c91e6bf6",
+    "bt_account": "Campo bt account",
+    "channel_payload_header": {
+      "header": "Prueba con Miguel",
+      "description": "Campo de descripción del detalle de la operacion - description - Description aún mas larga"
+    },
+    "channel_payload_detail": [
+      { "key": "Campo Key 1 Campo Key 1 Campo Key 1", "value": "Campo Value 1 Campo Value 1 Campo Value 1" },
+      { "key": "Campo Key 2 Campo Key 2 Campo Key 2", "value": "Campo Value 2 Campo Value 2 Campo Value 2" },
+      { "key": "Campo Key 3 Campo Key 3 Campo Key 3", "value": "Campo Value 3 Campo Value 3 Campo Value 3" },
+      { "key": "Campo Key 4 Campo Key 4 Campo Key 4", "value": "Campo Value 4 Campo Value 4 Campo Value 4" },
+      { "key": "Campo Key 5 Campo Key 5 Campo Key 5", "value": "Campo Value 5 Campo Value 5 Campo Value 5" },
+      { "key": "Campo Key 6 Campo Key 6 Campo Key 6", "value": "Campo Value 6 Campo Value 6 Campo Value 6" },
+      { "key": "Campo Key 7 Campo Key 7 Campo Key 7", "value": "Campo Value 7 Campo Value 7 Campo Value 7" },
+      { "key": "Campo Key 8 Campo Key 8 Campo Key 8", "value": "Campo Value 8 Campo Value 8 Campo Value 8" },
+      { "key": "Campo Key 9 Campo Key 9 Campo Key 9", "value": "Campo Value 9 Campo Value 9 Campo Value 9" },
+      { "key": "Campo Key 10 Campo Key 10 Campo Key 10", "value": "Campo Value 10 Campo Value 10 Campo Value 10" },
+      { "key": "Campo Key 11 Campo Key 11 Campo Key 11", "value": "Campo Value 11 Campo Value 11 Campo Value 11" },
+      { "key": "Campo Key 12 Campo Key 12 Campo Key 12", "value": "Campo Value 12 Campo Value 12 Campo Value 12" },
+      { "key": "Campo Key 13 Campo Key 13 Campo Key 13", "value": "Campo Value 13 Campo Value 13 Campo Value 13" },
+      { "key": "Campo Key 14 Campo Key 14 Campo Key 14", "value": "Campo Value 14 Campo Value 14 Campo Value 14" },
+      { "key": "Campo Key 15 Campo Key 15 Campo Key 15", "value": "Campo Value 15 Campo Value 15 Campo Value 15" },
+      { "key": "Campo Key 16 Campo Key 16 Campo Key 16", "value": "Campo Value 16 Campo Value 16 Campo Value 16" },
+      { "key": "Campo Key 17 Campo Key 17 Campo Key 17", "value": "Campo Value 17 Campo Value 17 Campo Value 17" },
+      { "key": "Campo Key 18 Campo Key 18 Campo Key 18", "value": "Campo Value 18 Campo Value 18 Campo Value 18" },
+      { "key": "Campo Key 19 Campo Key 19 Campo Key 19", "value": "Campo Value 19 Campo Value 19 Campo Value 19" },
+      { "key": "Campo Key 20 Campo Key 20 Campo Key 20", "value": "Campo Value 20 Campo Value 20 Campo Value 20" }
+    ]
+  }
+}

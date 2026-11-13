@@ -6,6 +6,13 @@ server:
     include-stacktrace: never
 
 spring:
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+    datatype:
+      datetime:
+        adjust-dates-to-context-time-zone: false
+        write-dates-as-timestamps: false
   application:
     name: audit-query-monolith
   mongodb:
@@ -15,6 +22,12 @@ app:
   timezone: ${AUDIT_TIMEZONE:America/Lima}
   mongodb:
     collection: ${MONGODB_COLLECTION:tapp_audit_events}
+
+audit:
+  api:
+    url: ${AUDIT_API_URL:http://localhost:8181/api/v1/audit/security/log}
+    connect-timeout: ${AUDIT_API_CONNECT_TIMEOUT:3s}
+    read-timeout: ${AUDIT_API_READ_TIMEOUT:10s}
 
 logging:
   level:

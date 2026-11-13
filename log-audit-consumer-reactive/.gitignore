@@ -1,0 +1,10 @@
+/target/
+/.m2-repository/
+/.gradle/
+/build/
+/.idea/
+*.iml
+*.log
+.env
+.env.*
+!.env.example

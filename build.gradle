@@ -5,7 +5,7 @@ plugins {
 
 group = 'pe.com.scotiabank.tapp'
 version = '1.0.0'
-description = 'Consulta de auditoría MongoDB con Angular y Material en un único JAR'
+description = 'Envío de Log Audit y consulta MongoDB con Angular y Material en un único JAR'
 
 java {
     toolchain { languageVersion = JavaLanguageVersion.of(25) }
@@ -21,10 +21,13 @@ sourceSets {
 }
 
 dependencies {
+    implementation project(':log-audit-consumer-reactive')
     implementation platform('org.springframework.boot:spring-boot-dependencies:4.0.9')
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-webclient'
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    compileOnly 'org.mapstruct:mapstruct:1.6.3'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
@@ -68,6 +71,8 @@ tasks.named('test', Test) {
             .map { true }.orElse(false))
     testLogging { events 'failed', 'skipped'; exceptionFormat = 'full' }
 }
+
+tasks.named('check') { dependsOn ':log-audit-consumer-reactive:check' }
 
 tasks.named('jar') { enabled = false }
 

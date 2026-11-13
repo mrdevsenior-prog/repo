@@ -1,0 +1,59 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.0.9'
+    id 'checkstyle'
+    id 'pmd'
+}
+
+group = 'pe.com.scotiabank.tapp'
+version = '1.0.0'
+description = 'Consumidor reactivo de auditoría con WebFlux, WebClient y MapStruct'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation platform('org.springframework.boot:spring-boot-dependencies:4.0.9')
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-webclient'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+
+    testImplementation('org.springframework.boot:spring-boot-starter-webflux-test') {
+        exclude group: 'org.mockito', module: 'mockito-core'
+        exclude group: 'org.mockito', module: 'mockito-junit-jupiter'
+    }
+    testImplementation 'com.tngtech.archunit:archunit:1.5.0'
+    testImplementation 'io.projectreactor:reactor-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 25
+    options.compilerArgs.add('-parameters')
+}
+
+tasks.named('compileJava', JavaCompile) {
+    options.compilerArgs.add('-Amapstruct.suppressGeneratorTimestamp=true')
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+    testLogging {
+        events 'failed', 'skipped'
+        exceptionFormat = 'full'
+    }
+}
+
+apply from: "$projectDir/gradle/static-analysis.gradle"
