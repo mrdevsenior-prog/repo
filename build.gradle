@@ -13,6 +13,8 @@ java {
 
 repositories { mavenCentral() }
 
+springBoot { mainClass = 'pe.com.scotiabank.tapp.audit.AuditApplication' }
+
 sourceSets {
     demo {
         compileClasspath += sourceSets.main.compileClasspath
@@ -83,7 +85,7 @@ tasks.register('seedDemo', JavaExec) {
     group = 'application'
     description = 'Inserta datos sintéticos únicamente en una base terminada en _demo'
     classpath = sourceSets.demo.runtimeClasspath
-    mainClass = 'pe.com.scotiabank.tapp.auditquery.demo.SeedDemo'
+    mainClass = 'pe.com.scotiabank.tapp.audit.demo.SeedDemo'
 }
 
 apply from: "$rootDir/gradle/unit-coverage.gradle"

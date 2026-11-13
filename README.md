@@ -30,6 +30,8 @@ El dashboard y los endpoints de consulta son de solo lectura sobre MongoDB. El e
 
 La POC de envío se conserva en `log-audit-consumer-reactive/`, con sus pruebas unitarias, de integración, de arquitectura, Checkstyle, PMD, ejemplos y Postman. El monolito reutiliza su caso de uso y cliente WebClient mediante un adaptador MVC que devuelve `Mono`; no ejecuta un segundo servidor. La POC también se puede iniciar por separado como aplicación WebFlux/Netty.
 
+Ambos módulos utilizan el paquete base `pe.com.scotiabank.tapp.audit`. La clase de inicio del monolito es `AuditApplication`. Su escaneo carga los adaptadores del monolito y el cliente compartido, y deja el controlador WebFlux y su manejador de errores para la ejecución independiente de `LogAuditConsumerApplication`, evitando rutas duplicadas.
+
 ## Compilar y ejecutar con tu MongoDB
 
 Requisitos: JDK 25, MongoDB y Node.js **24.15.0 o superior dentro de la rama 24**, **22.22.3 o superior dentro de la rama 22**, o **26+**, conforme a la compatibilidad de Angular 22. Node 24.14.1 no cumple el mínimo.
@@ -243,17 +245,17 @@ src/test/java/                     Pruebas de dominio e integración
 
 ### Clases del backend principal
 
-Paquete `pe.com.scotiabank.tapp.auditquery`, en `src/main/java/pe/com/scotiabank/tapp/auditquery/`:
+Paquete `pe.com.scotiabank.tapp.audit`, en `src/main/java/pe/com/scotiabank/tapp/audit/`:
 
 ```text
-AuditQueryApplication.java
+AuditApplication.java
 adapter/
   common/error/ApiError.java
   in/web/
     AuditQueryController.java
     AuditSubmissionController.java
     error/
-      ApiExceptionHandler.java
+      QueryExceptionHandler.java
       AuditSubmissionExceptionHandler.java
   out/mongo/MongoAuditQueryAdapter.java
 application/
