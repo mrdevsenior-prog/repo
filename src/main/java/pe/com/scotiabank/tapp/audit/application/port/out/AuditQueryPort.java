@@ -6,9 +6,14 @@ import pe.com.scotiabank.tapp.audit.domain.*;
 
 public interface AuditQueryPort {
   AuditPage search(AuditSearch search);
+
   AuditSummary summarize(AuditSearch search);
+
   AuditAnalytics analytics(AuditSearch search);
+
   Optional<Map<String, Object>> findByUid(String uid);
+
   AuditCatalogs catalogs();
+
   void checkConnection();
 }

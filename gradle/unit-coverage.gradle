@@ -1,36 +1,31 @@
 import org.gradle.testing.jacoco.tasks.JacocoReport
 import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 
-allprojects {
-    plugins.withId('java') {
-        apply plugin: 'jacoco'
-        jacoco { toolVersion = '0.8.16' }
-        tasks.withType(Test).configureEach {
-            jacoco { includes = ['pe.com.scotiabank.tapp.*'] }
-        }
-
-        tasks.register('unitTest', Test) {
-            group = 'verification'
-            description = 'Pruebas unitarias sin suites de integración ni arquitectura'
-            testClassesDirs = sourceSets.test.output.classesDirs
-            classpath = sourceSets.test.runtimeClasspath
-            useJUnitPlatform()
-            exclude '**/*IntegrationTest.class', '**/*ArchitectureTest.class'
-            testLogging { events 'failed'; exceptionFormat = 'full' }
-        }
-    }
+apply plugin: 'jacoco'
+jacoco { toolVersion = '0.8.16' }
+tasks.withType(Test).configureEach {
+    jacoco { includes = ['pe.com.scotiabank.tapp.*'] }
 }
 
-def unitCoverageClasses = files(provider { allprojects.collect { it.sourceSets.main.output.classesDirs } })
-def unitCoverageSources = files(provider { allprojects.collect {
-    [it.sourceSets.main.allSource.srcDirs, it.layout.buildDirectory.dir('generated/sources/annotationProcessor/java/main').get().asFile]
-} })
-def unitCoverageData = files(provider { allprojects.collect { it.layout.buildDirectory.file('jacoco/unitTest.exec').get().asFile } })
+tasks.register('unitTest', Test) {
+    group = 'verification'
+    description = 'Pruebas unitarias sin suites de integración ni arquitectura'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform()
+    exclude '**/*IntegrationTest.class', '**/*ArchitectureTest.class'
+    testLogging { events 'failed'; exceptionFormat = 'full' }
+}
+
+def unitCoverageClasses = sourceSets.main.output.classesDirs
+def unitCoverageSources = files(sourceSets.main.allSource.srcDirs,
+        layout.buildDirectory.dir('generated/sources/annotationProcessor/java/main'))
+def unitCoverageData = files(layout.buildDirectory.file('jacoco/unitTest.exec'))
 
 tasks.register('unitTestCoverage', JacocoReport) {
     group = 'verification'
-    description = 'Cobertura agregada de pruebas unitarias de todos los módulos'
-    dependsOn 'unitTest', ':log-audit-consumer-reactive:unitTest'
+    description = 'Cobertura unitaria del monolito completo'
+    dependsOn 'unitTest'
     classDirectories.from(unitCoverageClasses)
     sourceDirectories.from(unitCoverageSources)
     executionData.from(unitCoverageData)

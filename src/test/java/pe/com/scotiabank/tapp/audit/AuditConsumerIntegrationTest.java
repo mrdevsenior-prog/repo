@@ -63,7 +63,13 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    classes = AuditApplication.class,
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = {
+      "management.health.mongo.enabled=false",
+      "spring.mongodb.uri=mongodb://127.0.0.1:1/?serverSelectionTimeoutMS=100&connectTimeoutMS=100"
+    })
 class AuditConsumerIntegrationTest {
 
   private static final String PATH = "/api/v1/audit/security/log";

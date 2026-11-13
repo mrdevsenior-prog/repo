@@ -9,7 +9,7 @@ FROM eclipse-temurin:25-jdk AS backend
 WORKDIR /workspace
 COPY gradlew settings.gradle build.gradle ./
 COPY gradle/ gradle/
-COPY log-audit-consumer-reactive/ log-audit-consumer-reactive/
+COPY config/ config/
 COPY src/main/ src/main/
 COPY --from=frontend /workspace/frontend/dist/audit-query/browser frontend/dist/audit-query/browser/
 RUN chmod +x gradlew && ./gradlew bootJar -PskipFrontend --no-daemon

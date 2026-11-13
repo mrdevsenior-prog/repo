@@ -6,6 +6,8 @@ server:
     include-stacktrace: never
 
 spring:
+  main:
+    web-application-type: reactive
   jackson:
     deserialization:
       fail-on-unknown-properties: true

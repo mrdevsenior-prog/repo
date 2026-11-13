@@ -1,0 +1,53 @@
+checkstyle {
+    toolVersion = '10.21.4'
+    configFile = project.file('config/checkstyle/google_checks.xml')
+    configProperties = [
+        'org.checkstyle.google.suppressionfilter.config':
+            project.file('config/checkstyle/checkstyle-suppressions.xml').absolutePath
+    ]
+    maxErrors = 0
+    maxWarnings = 0
+    ignoreFailures = false
+}
+
+tasks.withType(Checkstyle).configureEach {
+    classpath = files()
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+pmd {
+    toolVersion = '7.26.0'
+    consoleOutput = true
+    ruleSets = []
+    ruleSetFiles = files(project.file('config/pmd/ruleset.xml'))
+    ignoreFailures = false
+}
+
+tasks.withType(Pmd).configureEach {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+// Preserve the original sender's static-analysis scope after merging its sources.
+// Unit coverage and architecture checks still include the entire backend.
+def senderMain = fileTree('src/main/java') {
+    include '**/AuditApplication.java', '**/adapter/common/**', '**/adapter/in/web/dto/**',
+            '**/adapter/in/web/mapper/**', '**/adapter/in/web/AuditSubmissionController.java',
+            '**/adapter/in/web/error/ApiExceptionHandler.java', '**/adapter/out/http/**',
+            '**/application/exception/**', '**/application/model/**', '**/application/port/in/SubmitAuditUseCase.java',
+            '**/application/port/out/SendAuditPort.java', '**/application/service/SubmitAuditService.java',
+            '**/bootstrap/ApplicationConfiguration.java', '**/domain/model/**'
+}
+def senderTests = fileTree('src/test/java') {
+    include '**/AuditApiClientTest.java', '**/AuditCollectionCopiesTest.java', '**/AuditConsumerIntegrationTest.java',
+            '**/AuditMappersTest.java', '**/HexagonalArchitectureTest.java', '**/SubmitAuditServiceTest.java'
+}
+tasks.named('checkstyleMain') { source = senderMain }
+tasks.named('pmdMain') { source = senderMain }
+tasks.named('checkstyleTest') { source = senderTests }
+tasks.named('pmdTest') { source = senderTests }

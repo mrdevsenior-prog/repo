@@ -1,2 +1,1 @@
 rootProject.name = 'audit-query-monolith'
-include 'log-audit-consumer-reactive'

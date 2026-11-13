@@ -31,22 +31,37 @@ class ReactiveExceptionHandlerUnitTest {
 
   @ParameterizedTest
   @MethodSource("failures")
-  void mapsEveryDeliveryFailureToItsPublicResponse(FailureKind kind, Integer upstream, int expected) {
-    StepVerifier.create(handler.handleAuditApi(new AuditDeliveryException(kind, "Mensaje público", upstream,
-        new IllegalStateException("private-provider-data")), exchange())).assertNext(response -> {
-      assertEquals(expected, response.getStatusCode().value());
-      ProblemDetail body = (ProblemDetail) response.getBody();
-      assertEquals("Mensaje público", body.getDetail());
-      if (upstream == null) assertNull(body.getProperties());
-      else assertEquals(upstream, body.getProperties().get("upstream_status"));
-      assertFalse(body.toString().contains("private-provider-data"));
-    }).expectComplete().verify(Duration.ofSeconds(2));
+  void mapsEveryDeliveryFailureToItsPublicResponse(
+      FailureKind kind, Integer upstream, int expected) {
+    StepVerifier.create(
+            handler.handleAuditApi(
+                new AuditDeliveryException(
+                    kind,
+                    "Mensaje público",
+                    upstream,
+                    new IllegalStateException("private-provider-data")),
+                exchange()))
+        .assertNext(
+            response -> {
+              assertEquals(expected, response.getStatusCode().value());
+              ProblemDetail body = (ProblemDetail) response.getBody();
+              assertEquals("Mensaje público", body.getDetail());
+              if (upstream == null) assertNull(body.getProperties());
+              else assertEquals(upstream, body.getProperties().get("upstream_status"));
+              assertFalse(body.toString().contains("private-provider-data"));
+            })
+        .expectComplete()
+        .verify(Duration.ofSeconds(2));
   }
 
   static Stream<Arguments> failures() {
-    return Stream.of(Arguments.of(FailureKind.REJECTED, 400, 400), Arguments.of(FailureKind.REJECTED, null, 502),
-        Arguments.of(FailureKind.PROVIDER_FAILURE, 503, 502), Arguments.of(FailureKind.INVALID_RESPONSE, 200, 502),
-        Arguments.of(FailureKind.UNAVAILABLE, null, 503), Arguments.of(FailureKind.TIMEOUT, null, 504));
+    return Stream.of(
+        Arguments.of(FailureKind.REJECTED, 400, 400),
+        Arguments.of(FailureKind.REJECTED, null, 502),
+        Arguments.of(FailureKind.PROVIDER_FAILURE, 503, 502),
+        Arguments.of(FailureKind.INVALID_RESPONSE, 200, 502),
+        Arguments.of(FailureKind.UNAVAILABLE, null, 503),
+        Arguments.of(FailureKind.TIMEOUT, null, 504));
   }
 
   @Test
@@ -54,19 +69,24 @@ class ReactiveExceptionHandlerUnitTest {
     BeanPropertyBindingResult binding = new BeanPropertyBindingResult(new Object(), "request");
     binding.addError(new FieldError("request", "account_name", "private-input"));
     var exception = new WebExchangeBindException(mock(MethodParameter.class), binding);
-    StepVerifier.create(handler.handleWebExchangeBindException(exception, HttpHeaders.EMPTY, HttpStatus.BAD_REQUEST, exchange()))
-        .assertNext(response -> {
-          ProblemDetail body = (ProblemDetail) response.getBody();
-          assertEquals(400, response.getStatusCode().value());
-          assertTrue(body.getProperties().get("errors").toString().contains("account_name"));
-          assertFalse(body.toString().contains("private-input"));
-        }).verifyComplete();
+    StepVerifier.create(
+            handler.handleWebExchangeBindException(
+                exception, HttpHeaders.EMPTY, HttpStatus.BAD_REQUEST, exchange()))
+        .assertNext(
+            response -> {
+              ProblemDetail body = (ProblemDetail) response.getBody();
+              assertEquals(400, response.getStatusCode().value());
+              assertTrue(body.getProperties().get("errors").toString().contains("account_name"));
+              assertFalse(body.toString().contains("private-input"));
+            })
+        .verifyComplete();
   }
 
   @Test
   void methodValidationHandlesFieldsNamedHeadersAndUnnamedParameters() {
     ParameterErrors fields = mock(ParameterErrors.class);
-    when(fields.getFieldErrors()).thenReturn(List.of(new FieldError("request", "event_message", "private-input")));
+    when(fields.getFieldErrors())
+        .thenReturn(List.of(new FieldError("request", "event_message", "private-input")));
     ParameterValidationResult named = mock(ParameterValidationResult.class);
     MethodParameter namedParameter = mock(MethodParameter.class);
     when(namedParameter.getParameterName()).thenReturn("apiVersion");
@@ -75,34 +95,50 @@ class ReactiveExceptionHandlerUnitTest {
     when(unnamed.getMethodParameter()).thenReturn(mock(MethodParameter.class));
     HandlerMethodValidationException exception = mock(HandlerMethodValidationException.class);
     when(exception.getParameterValidationResults()).thenReturn(List.of(fields, named, unnamed));
-    StepVerifier.create(handler.handleHandlerMethodValidationException(exception, HttpHeaders.EMPTY, HttpStatus.BAD_REQUEST, exchange()))
-        .assertNext(response -> {
-          ProblemDetail body = (ProblemDetail) response.getBody();
-          String errors = body.getProperties().get("errors").toString();
-          assertTrue(errors.contains("event_message"));
-          assertTrue(errors.contains("apiVersion"));
-          assertTrue(errors.contains("header"));
-          assertFalse(errors.contains("private-input"));
-        }).verifyComplete();
+    StepVerifier.create(
+            handler.handleHandlerMethodValidationException(
+                exception, HttpHeaders.EMPTY, HttpStatus.BAD_REQUEST, exchange()))
+        .assertNext(
+            response -> {
+              ProblemDetail body = (ProblemDetail) response.getBody();
+              String errors = body.getProperties().get("errors").toString();
+              assertTrue(errors.contains("event_message"));
+              assertTrue(errors.contains("apiVersion"));
+              assertTrue(errors.contains("header"));
+              assertFalse(errors.contains("private-input"));
+            })
+        .verifyComplete();
   }
 
   @Test
   void missingHeadersAndMalformedJsonUseSanitizedErrorDetails() {
     MissingRequestValueException missing = mock(MissingRequestValueException.class);
     when(missing.getName()).thenReturn("x-channel-id");
-    StepVerifier.create(handler.handleMissingRequestValueException(missing, HttpHeaders.EMPTY, HttpStatus.BAD_REQUEST, exchange()))
-        .assertNext(response -> {
-          assertEquals(400, response.getStatusCode().value());
-          assertTrue(response.getBody().toString().contains("x-channel-id"));
-        }).verifyComplete();
-    StepVerifier.create(handler.handleServerWebInputException(new ServerWebInputException("private-input"),
-        HttpHeaders.EMPTY, HttpStatus.BAD_REQUEST, exchange())).assertNext(response -> {
-          assertEquals(400, response.getStatusCode().value());
-          assertFalse(response.getBody().toString().contains("private-input"));
-        }).verifyComplete();
+    StepVerifier.create(
+            handler.handleMissingRequestValueException(
+                missing, HttpHeaders.EMPTY, HttpStatus.BAD_REQUEST, exchange()))
+        .assertNext(
+            response -> {
+              assertEquals(400, response.getStatusCode().value());
+              assertTrue(response.getBody().toString().contains("x-channel-id"));
+            })
+        .verifyComplete();
+    StepVerifier.create(
+            handler.handleServerWebInputException(
+                new ServerWebInputException("private-input"),
+                HttpHeaders.EMPTY,
+                HttpStatus.BAD_REQUEST,
+                exchange()))
+        .assertNext(
+            response -> {
+              assertEquals(400, response.getStatusCode().value());
+              assertFalse(response.getBody().toString().contains("private-input"));
+            })
+        .verifyComplete();
   }
 
   private static MockServerWebExchange exchange() {
-    return MockServerWebExchange.from(MockServerHttpRequest.post("/api/v1/audit/security/log").build());
+    return MockServerWebExchange.from(
+        MockServerHttpRequest.post("/api/v1/audit/security/log").build());
   }
 }

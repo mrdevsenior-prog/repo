@@ -5,9 +5,9 @@ import java.time.ZoneId;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import pe.com.scotiabank.tapp.audit.application.service.AuditQueryService;
 import pe.com.scotiabank.tapp.audit.application.port.in.AuditQueryUseCase;
 import pe.com.scotiabank.tapp.audit.application.port.out.AuditQueryPort;
+import pe.com.scotiabank.tapp.audit.application.service.AuditQueryService;
 
 @Configuration
 public class QueryConfiguration {
@@ -17,5 +17,7 @@ public class QueryConfiguration {
   }
 
   @Bean
-  AuditQueryUseCase auditQueryService(AuditQueryPort port) { return new AuditQueryService(port); }
+  AuditQueryUseCase auditQueryService(AuditQueryPort port) {
+    return new AuditQueryService(port);
+  }
 }

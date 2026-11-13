@@ -15,15 +15,27 @@ import pe.com.scotiabank.tapp.audit.domain.*;
 class QueryServiceUnitTest {
   private final AuditQueryPort port = mock(AuditQueryPort.class);
   private final AuditQueryService service = new AuditQueryService(port);
-  private final AuditSearch search = new AuditSearch("", "", "", null, null, 0, 10, "timestamp", "desc");
+  private final AuditSearch search =
+      new AuditSearch("", "", "", null, null, 0, 10, "timestamp", "desc");
 
   @Test
   void delegatesTheCompleteQueryWithoutChangingItsResults() {
     AuditPage page = new AuditPage(List.of(), 12, 0, 10);
     AuditSummary summary = new AuditSummary(12, 2, 3, 4);
     AuditCatalogs catalogs = new AuditCatalogs(List.of("TAPP"), List.of("HIGH"));
-    AuditAnalytics analytics = new AuditAnalytics(summary, List.of(), List.of(), List.of(), List.of(), List.of(),
-        0, "2026-11-01", "2026-11-13", "America/Lima", java.time.Instant.EPOCH);
+    AuditAnalytics analytics =
+        new AuditAnalytics(
+            summary,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            0,
+            "2026-11-01",
+            "2026-11-13",
+            "America/Lima",
+            java.time.Instant.EPOCH);
     when(port.search(search)).thenReturn(page);
     when(port.summarize(search)).thenReturn(summary);
     when(port.analytics(search)).thenReturn(analytics);
@@ -67,14 +79,32 @@ class QueryServiceUnitTest {
   void resultCollectionsCannotBeChangedThroughTheirOriginalListsOrAccessors() {
     ArrayList<String> values = new ArrayList<>(List.of("TAPP"));
     AuditCatalogs catalogs = new AuditCatalogs(values, values);
-    ArrayList<AuditAnalytics.Bucket> buckets = new ArrayList<>(List.of(new AuditAnalytics.Bucket("day", 1)));
-    AuditAnalytics analytics = new AuditAnalytics(new AuditSummary(1, 1, 0, 0), buckets, buckets, buckets,
-        buckets, buckets, 0, "start", "end", "America/Lima", java.time.Instant.EPOCH);
+    ArrayList<AuditAnalytics.Bucket> buckets =
+        new ArrayList<>(List.of(new AuditAnalytics.Bucket("day", 1)));
+    AuditAnalytics analytics =
+        new AuditAnalytics(
+            new AuditSummary(1, 1, 0, 0),
+            buckets,
+            buckets,
+            buckets,
+            buckets,
+            buckets,
+            0,
+            "start",
+            "end",
+            "America/Lima",
+            java.time.Instant.EPOCH);
     values.clear();
     buckets.clear();
     assertEquals(List.of("TAPP"), catalogs.applications());
     assertEquals(List.of("TAPP"), catalogs.priorities());
-    for (var list : List.of(analytics.daily(), analytics.applications(), analytics.priorities(), analytics.actions(), analytics.hours())) {
+    for (var list :
+        List.of(
+            analytics.daily(),
+            analytics.applications(),
+            analytics.priorities(),
+            analytics.actions(),
+            analytics.hours())) {
       assertEquals(1, list.size());
       assertThrows(UnsupportedOperationException.class, list::clear);
     }

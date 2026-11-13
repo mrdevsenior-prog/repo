@@ -16,9 +16,12 @@ class SubmissionConfigurationUnitTest {
     SendAuditPort port = mock(SendAuditPort.class);
     AuditEvent event = mock(AuditEvent.class);
     AuditContext context = new AuditContext("v1", "WEB", "TAPP", "PE");
-    AuditSubmission result = new AuditSubmission(new AuditResult(List.of(new AuditResult.AuditStatus("OK"))), 200);
+    AuditSubmission result =
+        new AuditSubmission(new AuditResult(List.of(new AuditResult.AuditStatus("OK"))), 200);
     when(port.send(event, context)).thenReturn(Mono.just(result));
-    StepVerifier.create(new ApplicationConfiguration().submitAuditUseCase(port).submit(event, context))
-        .expectNext(result).verifyComplete();
+    StepVerifier.create(
+            new ApplicationConfiguration().submitAuditUseCase(port).submit(event, context))
+        .expectNext(result)
+        .verifyComplete();
   }
 }

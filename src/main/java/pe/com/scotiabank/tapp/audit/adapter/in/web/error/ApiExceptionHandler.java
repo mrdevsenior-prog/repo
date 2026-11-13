@@ -17,10 +17,11 @@ import org.springframework.web.reactive.result.method.annotation.ResponseEntityE
 import org.springframework.web.server.MissingRequestValueException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.ServerWebInputException;
+import pe.com.scotiabank.tapp.audit.adapter.in.web.AuditSubmissionController;
 import pe.com.scotiabank.tapp.audit.application.exception.AuditDeliveryException;
 import reactor.core.publisher.Mono;
 
-@RestControllerAdvice
+@RestControllerAdvice(assignableTypes = AuditSubmissionController.class)
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
   private static final String FIELD_KEY = "field";

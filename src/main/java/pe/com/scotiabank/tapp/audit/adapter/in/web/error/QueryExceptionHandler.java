@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.server.ServerWebInputException;
 import pe.com.scotiabank.tapp.audit.adapter.common.error.ApiError;
 import pe.com.scotiabank.tapp.audit.adapter.in.web.AuditQueryController;
 
@@ -18,19 +18,24 @@ public class QueryExceptionHandler {
     return ResponseEntity.badRequest().body(new ApiError("INVALID_FILTER", exception.getMessage()));
   }
 
-  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  @ExceptionHandler(ServerWebInputException.class)
   ResponseEntity<ApiError> invalidType() {
-    return ResponseEntity.badRequest().body(new ApiError("INVALID_FILTER", "Revisa el formato de los filtros y la página."));
+    return ResponseEntity.badRequest()
+        .body(new ApiError("INVALID_FILTER", "Revisa el formato de los filtros y la página."));
   }
 
   @ExceptionHandler(NoSuchElementException.class)
   ResponseEntity<ApiError> missing(NoSuchElementException exception) {
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiError("EVENT_NOT_FOUND", exception.getMessage()));
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .body(new ApiError("EVENT_NOT_FOUND", exception.getMessage()));
   }
 
   @ExceptionHandler({MongoException.class, DataAccessException.class})
   ResponseEntity<ApiError> unavailable() {
     return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-        .body(new ApiError("DATABASE_UNAVAILABLE", "No se pudo consultar MongoDB. Verifica la conexión e inténtalo nuevamente."));
+        .body(
+            new ApiError(
+                "DATABASE_UNAVAILABLE",
+                "No se pudo consultar MongoDB. Verifica la conexión e inténtalo nuevamente."));
   }
 }

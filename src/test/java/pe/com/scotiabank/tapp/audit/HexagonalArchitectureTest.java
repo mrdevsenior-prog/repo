@@ -103,4 +103,15 @@ class HexagonalArchitectureTest {
             .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
             .importPackages(ROOT));
   }
+
+  @Test
+  void sharedAdapterTypesDoNotDependOnInboundOrOutboundAdapters() {
+    assertProductionArchitecture(
+        noClasses()
+            .that()
+            .resideInAPackage(ROOT + ".adapter.common..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAnyPackage(ROOT + ".adapter.in..", ROOT + ".adapter.out.."));
+  }
 }

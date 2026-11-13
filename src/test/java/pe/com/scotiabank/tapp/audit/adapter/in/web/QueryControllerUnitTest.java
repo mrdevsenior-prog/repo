@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import org.junit.jupiter.api.Test;
@@ -22,19 +23,43 @@ class QueryControllerUnitTest {
   void forwardsEverySearchParameterAndNormalizesOffsetDates() {
     AuditPage page = new AuditPage(List.of(), 0, 3, 20);
     when(useCase.search(any())).thenReturn(page);
-    assertSame(page, controller.search(" uid ", "TAPP", "HIGH", "2026-11-13T00:00:00-05:00",
-        "2026-11-14T00:00:00-05:00", 3, 20, "account", "asc"));
+    assertSame(
+        page,
+        controller
+            .search(
+                " uid ",
+                "TAPP",
+                "HIGH",
+                "2026-11-13T00:00:00-05:00",
+                "2026-11-14T00:00:00-05:00",
+                3,
+                20,
+                "account",
+                "asc")
+            .block(Duration.ofSeconds(2)));
     ArgumentCaptor<AuditSearch> query = ArgumentCaptor.forClass(AuditSearch.class);
     verify(useCase).search(query.capture());
-    assertEquals(new AuditSearch("uid", "TAPP", "HIGH", Instant.parse("2026-11-13T05:00:00Z"),
-        Instant.parse("2026-11-14T05:00:00Z"), 3, 20, "account", "asc"), query.getValue());
+    assertEquals(
+        new AuditSearch(
+            "uid",
+            "TAPP",
+            "HIGH",
+            Instant.parse("2026-11-13T05:00:00Z"),
+            Instant.parse("2026-11-14T05:00:00Z"),
+            3,
+            20,
+            "account",
+            "asc"),
+        query.getValue());
   }
 
   @ParameterizedTest
   @NullAndEmptySource
   @ValueSource(strings = {" ", "\t"})
   void supportsOptionalDatesWithoutSupplyingAnArtificialInterval(String date) {
-    controller.search("", "", "", date, date, 0, 10, "timestamp", "desc");
+    controller
+        .search("", "", "", date, date, 0, 10, "timestamp", "desc")
+        .block(Duration.ofSeconds(2));
     ArgumentCaptor<AuditSearch> query = ArgumentCaptor.forClass(AuditSearch.class);
     verify(useCase).search(query.capture());
     assertNull(query.getValue().from());
@@ -44,13 +69,28 @@ class QueryControllerUnitTest {
   @Test
   void usesTheSameFiltersForTheSummaryAndAnalytics() {
     AuditSummary summary = new AuditSummary(1, 1, 0, 0);
-    AuditAnalytics analytics = new AuditAnalytics(summary, List.of(), List.of(), List.of(), List.of(), List.of(),
-        0, "a", "b", "America/Lima", Instant.EPOCH);
+    AuditAnalytics analytics =
+        new AuditAnalytics(
+            summary,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            0,
+            "a",
+            "b",
+            "America/Lima",
+            Instant.EPOCH);
     when(useCase.summarize(any())).thenReturn(summary);
     when(useCase.analytics(any())).thenReturn(analytics);
-    assertSame(summary, controller.summary("q", "TAPP", "HIGH", null, null));
-    assertSame(analytics, controller.analytics("q", "TAPP", "HIGH", null, null));
-    AuditSearch expected = new AuditSearch("q", "TAPP", "HIGH", null, null, 0, 10, "timestamp", "desc");
+    assertSame(
+        summary, controller.summary("q", "TAPP", "HIGH", null, null).block(Duration.ofSeconds(2)));
+    assertSame(
+        analytics,
+        controller.analytics("q", "TAPP", "HIGH", null, null).block(Duration.ofSeconds(2)));
+    AuditSearch expected =
+        new AuditSearch("q", "TAPP", "HIGH", null, null, 0, 10, "timestamp", "desc");
     verify(useCase).summarize(expected);
     verify(useCase).analytics(expected);
   }
@@ -61,18 +101,36 @@ class QueryControllerUnitTest {
     AuditCatalogs catalogs = new AuditCatalogs(List.of("TAPP"), List.of("HIGH"));
     when(useCase.detail("u1")).thenReturn(detail);
     when(useCase.catalogs()).thenReturn(catalogs);
-    assertSame(detail, controller.detail("u1"));
-    assertSame(catalogs, controller.catalogs());
-    assertEquals(Map.of("status", "UP"), controller.health());
+    assertSame(detail, controller.detail("u1").block(Duration.ofSeconds(2)));
+    assertSame(catalogs, controller.catalogs().block(Duration.ofSeconds(2)));
+    assertEquals(Map.of("status", "UP"), controller.health().block(Duration.ofSeconds(2)));
     verify(useCase).checkConnection();
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"invalid", "2026-11-13T00:00:00"})
   void rejectsDatesWithoutAnExplicitTimezoneBeforeCallingTheUseCase(String date) {
-    IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-        () -> controller.summary("", "", "", date, null));
+    IllegalArgumentException error =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> controller.summary("", "", "", date, null).block(Duration.ofSeconds(2)));
     assertTrue(error.getMessage().contains("zona horaria"));
     verifyNoInteractions(useCase);
+  }
+
+  @Test
+  void runsSynchronousMongoQueriesOutsideTheEventLoopAndDefersThemUntilSubscription() {
+    when(useCase.catalogs())
+        .thenAnswer(
+            invocation -> {
+              assertFalse(reactor.core.scheduler.Schedulers.isInNonBlockingThread());
+              return new AuditCatalogs(List.of(), List.of());
+            });
+    var result = controller.catalogs();
+    verifyNoInteractions(useCase);
+    reactor.test.StepVerifier.create(
+            result.subscribeOn(reactor.core.scheduler.Schedulers.parallel()))
+        .expectNext(new AuditCatalogs(List.of(), List.of()))
+        .verifyComplete();
   }
 }

@@ -3,8 +3,16 @@ package pe.com.scotiabank.tapp.audit.domain;
 import java.time.Instant;
 import java.util.Set;
 
-public record AuditSearch(String q, String application, String priority, Instant from, Instant to,
-                          int page, int size, String sort, String direction) {
+public record AuditSearch(
+    String q,
+    String application,
+    String priority,
+    Instant from,
+    Instant to,
+    int page,
+    int size,
+    String sort,
+    String direction) {
   public AuditSearch {
     q = normalize(q);
     application = normalize(application);
