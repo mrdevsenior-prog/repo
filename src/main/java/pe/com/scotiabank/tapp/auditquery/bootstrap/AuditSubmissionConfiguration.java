@@ -1,4 +1,4 @@
-package pe.com.scotiabank.tapp.auditquery.config;
+package pe.com.scotiabank.tapp.auditquery.bootstrap;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.ComponentScan;

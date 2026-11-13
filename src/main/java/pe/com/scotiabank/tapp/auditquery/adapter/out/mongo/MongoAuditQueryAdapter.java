@@ -1,4 +1,4 @@
-package pe.com.scotiabank.tapp.auditquery.adapter.mongo;
+package pe.com.scotiabank.tapp.auditquery.adapter.out.mongo;
 
 import static com.mongodb.client.model.Filters.*;
 
@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Repository;
 import pe.com.scotiabank.tapp.auditquery.domain.*;
+import pe.com.scotiabank.tapp.auditquery.application.port.out.AuditQueryPort;
 
 @Repository
 public class MongoAuditQueryAdapter implements AuditQueryPort {

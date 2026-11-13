@@ -182,11 +182,41 @@ Las 34 pruebas de integración del POST en el monolito usan un producer HTTP sim
 
 La compilación de producción de Angular verifica TypeScript y las plantillas con modo estricto. La UI no utiliza datos de ejemplo como sustituto silencioso de una conexión fallida.
 
+### Cobertura de pruebas unitarias
+
+Desde la raíz del repositorio:
+
+```powershell
+.\gradlew.bat unitTestCoverageVerification -PskipFrontend
+```
+
+JaCoCo **0.8.16** mide únicamente las tareas `unitTest` de los dos módulos. Las suites `*IntegrationTest` y `*ArchitectureTest` quedan fuera de esa medición. Las 182 pruebas unitarias usan dobles en memoria; no requieren MongoDB ni un producer HTTP real.
+
+| Métrica del backend | Cubierto | Cobertura |
+| --- | --- | --- |
+| Líneas | 637 de 637 | **100%** |
+| Ramas | 238 de 238 | **100%** |
+| Métodos medidos | 166 de 166 | **100%** |
+| Clases medidas | 47 de 47 | **100%** |
+
+La medición incluye todas las clases de producción de ambos módulos, las configuraciones, los puntos de entrada y los mappers generados por MapStruct. El cargador demo pertenece a un source set separado del código de producción. Este reporte corresponde al backend Java; Angular se valida mediante su compilación de producción.
+
+`unitTestCoverageVerification` exige al menos **99% de líneas y 99% de ramas** y forma parte de `check` y `build`: una regresión por debajo de cualquiera de esos límites falla la compilación. No utiliza los archivos de cobertura de la tarea `test`, que también ejecuta integración.
+
+Reportes generados:
+
+- HTML: `build/reports/jacoco/unitTest/html/index.html`.
+- XML: `build/reports/jacoco/unitTest/unitTestCoverage.xml`.
+- CSV: `build/reports/jacoco/unitTest/unitTestCoverage.csv`.
+
+La suite completa contiene 401 casos: 182 unitarios, 205 de integración y 14 de arquitectura. `build` ejecuta esa suite y además las tareas unitarias separadas para verificar su cobertura.
+
 ### Verificación realizada en esta entrega
 
 - `build` completo: instalación reproducible, compilación de Angular y empaquetado del JAR correctos.
-- Consulta: 7 pruebas de dominio y 17 HTTP contra MongoDB 8.0 real. Se utiliza una instancia de prueba en el puerto 27028, separada del MongoDB existente en 27017.
-- Envío: 34 pruebas HTTP de integración del POST en el monolito y 270 de la POC WebFlux reutilizada, además de Checkstyle y PMD. En total, 328 pruebas sin fallos ni omisiones.
+- Consulta: 8 pruebas de validación de búsqueda y 17 HTTP contra MongoDB 8.0 real, además de las unitarias de servicio, adaptador MongoDB, controladores y errores. Se utiliza una instancia de prueba en el puerto 27028, separada del MongoDB existente en 27017.
+- Envío: 34 pruebas HTTP de integración del POST en el monolito y las 270 de la POC WebFlux reutilizada, además de Checkstyle y PMD. Las seis pruebas de arquitectura de consulta comprueban las dependencias de dominio, aplicación, puertos y adaptadores. La suite completa pasó sus 401 casos sin fallos ni omisiones.
+- Cobertura unitaria: 182 casos, 100% de líneas y ramas y umbral obligatorio de 99% en ambas métricas, sin incorporar los resultados de integración.
 - JAR empaquetado: Angular, conexión MongoDB, estadísticas y detalle comprobados junto con un POST a un producer simulado. Se conservaron el HTTP 202, los veinte detalles y las cuatro cabeceras, y el POST no escribió directamente en MongoDB.
 - Navegador: consulta por aplicación, detalle, payload dinámico, resultados vacíos, paginación, filtro de hoy y descarga JSON comprobados. Sin errores de JavaScript durante estas comprobaciones.
 - Dashboard: gráficos por aplicación, prioridad y día comprobados en el navegador, incluidos filtros combinados. La exportación de estadísticas conserva el total y las sumas de las series de los 36 eventos sintéticos.
@@ -201,13 +231,94 @@ frontend/                          Angular standalone + Material + signals
 log-audit-consumer-reactive/        POC de envío recuperada y reutilizada como módulo
 examples/                          JSON original y cliente HTTP del POST
 postman/                           Envío, consulta, detalle y estadísticas
-src/main/java/.../domain/           Modelos y puerto de consulta, Java puro
-src/main/java/.../application/      Caso de uso, Java puro
-src/main/java/.../adapter/mongo/    Lectura MongoDB y conversión BSON
-src/main/java/.../adapter/web/      Controladores REST de consulta y envío, y errores
-src/main/java/.../config/           Cableado y reloj
+src/main/java/.../domain/           Modelos de consulta, Java puro
+src/main/java/.../application/      Puertos y servicio de consulta, Java puro
+src/main/java/.../adapter/common/   Contratos compartidos de los adaptadores
+src/main/java/.../adapter/in/       Entrada HTTP y manejo de errores
+src/main/java/.../adapter/out/      Salida a MongoDB
+src/main/java/.../bootstrap/        Cableado de consulta y envío, y reloj
 src/demo/java/                     Carga sintética separada
 src/test/java/                     Pruebas de dominio e integración
+```
+
+### Clases del backend principal
+
+Paquete `pe.com.scotiabank.tapp.auditquery`, en `src/main/java/pe/com/scotiabank/tapp/auditquery/`:
+
+```text
+AuditQueryApplication.java
+adapter/
+  common/error/ApiError.java
+  in/web/
+    AuditQueryController.java
+    AuditSubmissionController.java
+    error/
+      ApiExceptionHandler.java
+      AuditSubmissionExceptionHandler.java
+  out/mongo/MongoAuditQueryAdapter.java
+application/
+  port/in/AuditQueryUseCase.java
+  port/out/AuditQueryPort.java
+  service/AuditQueryService.java
+bootstrap/
+  AuditSubmissionConfiguration.java
+  QueryConfiguration.java
+domain/
+  AuditAnalytics.java
+  AuditCatalogs.java
+  AuditEvent.java
+  AuditPage.java
+  AuditSearch.java
+  AuditSummary.java
+```
+
+El controlador de consulta depende del puerto de entrada `AuditQueryUseCase`; el servicio utiliza el puerto de salida `AuditQueryPort`, que implementa el adaptador MongoDB. El controlador de envío reutiliza el caso de uso y los mappers del módulo Log Audit.
+
+### Clases de la POC de envío
+
+Paquete `pe.com.scotiabank.tapp.audit`, en `log-audit-consumer-reactive/src/main/java/pe/com/scotiabank/tapp/audit/`:
+
+```text
+LogAuditConsumerApplication.java
+adapter/
+  common/
+    http/AuditHttpHeaderConstants.java
+    mapper/StrictMapperConfig.java
+  in/web/
+    AuditLogController.java
+    dto/AuditLogRequest.java
+    dto/AuditLogResponse.java
+    error/ApiExceptionHandler.java
+    mapper/AuditWebMapper.java
+  out/http/
+    AuditApiClient.java
+    config/AuditApiProperties.java
+    config/AuditClientConfiguration.java
+    dto/AuditApiRequest.java
+    dto/AuditApiResponse.java
+    mapper/AuditApiMapper.java
+application/
+  exception/AuditDeliveryException.java
+  model/AuditSubmission.java
+  port/in/SubmitAuditUseCase.java
+  port/out/SendAuditPort.java
+  service/SubmitAuditService.java
+bootstrap/ApplicationConfiguration.java
+domain/model/
+  AuditContext.java
+  AuditEvent.java
+  AuditPayloadCopyUtils.java
+  AuditResult.java
+```
+
+El inventario contiene 42 archivos Java de producción: 18 del backend principal y los 24 originales de envío. También incluye una herramienta de carga demo y 22 archivos Java de pruebas.
+
+`AuditWebMapperImpl` y `AuditApiMapperImpl` los genera MapStruct en `log-audit-consumer-reactive/build/generated/sources/annotationProcessor/java/main/` al ejecutar `compileJava`. Se incluyen en el JAR de envío que se empaqueta dentro del monolito.
+
+En IntelliJ, abre la carpeta raíz que contiene este `settings.gradle`, selecciona JDK 25 como Gradle JVM y recarga todos los proyectos Gradle. El módulo de envío forma parte de la compilación de la raíz. Para generar sus mappers:
+
+```powershell
+.\gradlew.bat compileJava
 ```
 
 ## Referencias

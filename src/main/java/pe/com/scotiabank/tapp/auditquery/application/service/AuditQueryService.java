@@ -1,10 +1,12 @@
-package pe.com.scotiabank.tapp.auditquery.application;
+package pe.com.scotiabank.tapp.auditquery.application.service;
 
 import java.util.Map;
 import java.util.NoSuchElementException;
 import pe.com.scotiabank.tapp.auditquery.domain.*;
+import pe.com.scotiabank.tapp.auditquery.application.port.in.AuditQueryUseCase;
+import pe.com.scotiabank.tapp.auditquery.application.port.out.AuditQueryPort;
 
-public final class AuditQueryService {
+public final class AuditQueryService implements AuditQueryUseCase {
   private final AuditQueryPort queries;
 
   public AuditQueryService(AuditQueryPort queries) { this.queries = queries; }

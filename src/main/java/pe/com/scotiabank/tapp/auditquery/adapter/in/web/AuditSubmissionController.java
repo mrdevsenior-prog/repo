@@ -1,4 +1,4 @@
-package pe.com.scotiabank.tapp.auditquery.adapter.web;
+package pe.com.scotiabank.tapp.auditquery.adapter.in.web;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;

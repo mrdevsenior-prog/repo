@@ -1,4 +1,4 @@
-package pe.com.scotiabank.tapp.auditquery.adapter.web;
+package pe.com.scotiabank.tapp.auditquery.adapter.in.web.error;
 
 import com.mongodb.MongoException;
 import java.util.NoSuchElementException;
@@ -8,11 +8,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import pe.com.scotiabank.tapp.auditquery.adapter.common.error.ApiError;
+import pe.com.scotiabank.tapp.auditquery.adapter.in.web.AuditQueryController;
 
 @RestControllerAdvice(assignableTypes = AuditQueryController.class)
 public class ApiExceptionHandler {
-  public record ApiError(String code, String message) {}
-
   @ExceptionHandler(IllegalArgumentException.class)
   ResponseEntity<ApiError> invalid(IllegalArgumentException exception) {
     return ResponseEntity.badRequest().body(new ApiError("INVALID_FILTER", exception.getMessage()));

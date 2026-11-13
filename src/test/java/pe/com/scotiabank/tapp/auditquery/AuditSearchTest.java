@@ -41,4 +41,17 @@ class AuditSearchTest {
     assertThrows(IllegalArgumentException.class,
         () -> new AuditSearch("x".repeat(121), "", "", null, null, 0, 10, "timestamp", "desc"));
   }
+
+  @Test
+  void validatesEachTextLimitAndAcceptsBoundaryValuesAndOpenDateIntervals() {
+    assertThrows(IllegalArgumentException.class,
+        () -> new AuditSearch("", "a".repeat(41), "", null, null, 0, 10, "timestamp", "desc"));
+    assertThrows(IllegalArgumentException.class,
+        () -> new AuditSearch("", "", "p".repeat(41), null, null, 0, 10, "timestamp", "desc"));
+    Instant now = Instant.parse("2026-11-13T00:00:00Z");
+    assertDoesNotThrow(() -> new AuditSearch("q".repeat(120), "a".repeat(40), "p".repeat(40), now,
+        now.plusSeconds(1), 10000, 100, "priority", "asc"));
+    assertDoesNotThrow(() -> new AuditSearch(null, null, null, now, null, 0, 1, "account", "desc"));
+    assertDoesNotThrow(() -> new AuditSearch(null, null, null, null, now, 0, 1, "application", "desc"));
+  }
 }

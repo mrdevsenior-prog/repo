@@ -1,19 +1,19 @@
-package pe.com.scotiabank.tapp.auditquery.adapter.web;
+package pe.com.scotiabank.tapp.auditquery.adapter.in.web;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
 import org.springframework.web.bind.annotation.*;
-import pe.com.scotiabank.tapp.auditquery.application.AuditQueryService;
+import pe.com.scotiabank.tapp.auditquery.application.port.in.AuditQueryUseCase;
 import pe.com.scotiabank.tapp.auditquery.domain.*;
 
 @RestController
 @RequestMapping("/api/v1/audit")
 public class AuditQueryController {
-  private final AuditQueryService service;
+  private final AuditQueryUseCase service;
 
-  public AuditQueryController(AuditQueryService service) { this.service = service; }
+  public AuditQueryController(AuditQueryUseCase service) { this.service = service; }
 
   @GetMapping("/events")
   AuditPage search(@RequestParam(defaultValue = "") String q,

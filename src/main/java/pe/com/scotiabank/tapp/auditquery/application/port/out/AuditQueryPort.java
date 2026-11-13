@@ -1,7 +1,8 @@
-package pe.com.scotiabank.tapp.auditquery.domain;
+package pe.com.scotiabank.tapp.auditquery.application.port.out;
 
 import java.util.Map;
 import java.util.Optional;
+import pe.com.scotiabank.tapp.auditquery.domain.*;
 
 public interface AuditQueryPort {
   AuditPage search(AuditSearch search);

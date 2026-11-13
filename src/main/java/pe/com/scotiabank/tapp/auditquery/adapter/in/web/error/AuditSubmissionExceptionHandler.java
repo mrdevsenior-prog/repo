@@ -1,4 +1,4 @@
-package pe.com.scotiabank.tapp.auditquery.adapter.web;
+package pe.com.scotiabank.tapp.auditquery.adapter.in.web.error;
 
 import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -9,6 +9,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import pe.com.scotiabank.tapp.audit.application.exception.AuditDeliveryException;
+import pe.com.scotiabank.tapp.auditquery.adapter.in.web.AuditSubmissionController;
 
 @RestControllerAdvice(assignableTypes = AuditSubmissionController.class)
 public class AuditSubmissionExceptionHandler extends ResponseEntityExceptionHandler {
