@@ -1,0 +1,21 @@
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+
+spring:
+  application:
+    name: audit-query-monolith
+  mongodb:
+    uri: ${MONGODB_URI:mongodb://localhost:27017/lineage_audit?retryWrites=false&serverSelectionTimeoutMS=3000&connectTimeoutMS=3000&socketTimeoutMS=10000}
+    database: ${MONGODB_DATABASE:lineage_audit}
+app:
+  timezone: ${AUDIT_TIMEZONE:America/Lima}
+  mongodb:
+    collection: ${MONGODB_COLLECTION:tapp_audit_events}
+
+logging:
+  level:
+    org.mongodb.driver: WARN

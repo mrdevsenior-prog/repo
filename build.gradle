@@ -1,0 +1,79 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.0.9'
+}
+
+group = 'pe.com.scotiabank.tapp'
+version = '1.0.0'
+description = 'Consulta de auditoría MongoDB con Angular y Material en un único JAR'
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(25) }
+}
+
+repositories { mavenCentral() }
+
+sourceSets {
+    demo {
+        compileClasspath += sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.runtimeClasspath
+    }
+}
+
+dependencies {
+    implementation platform('org.springframework.boot:spring-boot-dependencies:4.0.9')
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 25
+    options.compilerArgs.add('-parameters')
+}
+
+def windows = System.getProperty('os.name').toLowerCase().contains('windows')
+def npmExecutable = providers.gradleProperty('npmExecutable').getOrElse(windows ? 'npm.cmd' : 'npm')
+
+tasks.register('frontendInstall', Exec) {
+    workingDir 'frontend'
+    commandLine npmExecutable, 'ci', '--no-fund', '--no-audit'
+    inputs.files('frontend/package.json', 'frontend/package-lock.json')
+    outputs.dir('frontend/node_modules')
+    onlyIf { !providers.gradleProperty('skipFrontend').isPresent() }
+}
+
+tasks.register('frontendBuild', Exec) {
+    dependsOn 'frontendInstall'
+    workingDir 'frontend'
+    commandLine npmExecutable, 'run', 'build'
+    inputs.dir('frontend/src')
+    inputs.files('frontend/angular.json', 'frontend/tsconfig.json', 'frontend/tsconfig.app.json',
+            'frontend/package.json', 'frontend/package-lock.json')
+    outputs.dir('frontend/dist/audit-query/browser')
+    onlyIf { !providers.gradleProperty('skipFrontend').isPresent() }
+}
+
+tasks.named('processResources') {
+    dependsOn 'frontendBuild'
+    from('frontend/dist/audit-query/browser') { into 'static' }
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+    inputs.property('mongoIntegrationEnabled', providers.environmentVariable('MONGODB_TEST_URI')
+            .map { true }.orElse(false))
+    testLogging { events 'failed', 'skipped'; exceptionFormat = 'full' }
+}
+
+tasks.named('jar') { enabled = false }
+
+tasks.register('seedDemo', JavaExec) {
+    group = 'application'
+    description = 'Inserta datos sintéticos únicamente en una base terminada en _demo'
+    classpath = sourceSets.demo.runtimeClasspath
+    mainClass = 'pe.com.scotiabank.tapp.auditquery.demo.SeedDemo'
+}

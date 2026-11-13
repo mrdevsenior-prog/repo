@@ -1,0 +1,44 @@
+:host { display: block; min-width: 0; }
+.detail-header { display: flex; align-items: center; justify-content: space-between; padding: 19px 22px 0; gap: 12px; }
+.eyebrow { color: #7d968a; letter-spacing: 1.5px; font-size: 8px; font-weight: 700; }
+h2[mat-dialog-title] { padding: 0; font-size: 21px; font-weight: 650; letter-spacing: -.5px; margin: 5px 0 0; line-height: 1.4; }
+h2[mat-dialog-title]::before { display: none; }
+.uid-row { display: flex; align-items: center; gap: 8px; margin: 1px 22px 6px; color: #8b98a6; }
+.uid-row .mono { overflow-wrap: anywhere; font-size: 10px; }
+.uid-row button { margin-left: auto; flex-shrink: 0; width: 32px; height: 32px; padding: 6px; }
+.uid-row app-icon { width: 15px; height: 15px; }
+.copy-message { font-size: 10px; color: #936e3a; margin: 0 22px 9px; }
+mat-dialog-content { max-height: 65vh; padding: 0 22px !important; }
+.tab-content { padding: 15px 0 4px; }
+.operation-description { font-size: 11px; color: #6c8578; font-weight: 500; margin: 0 0 16px; }
+.detail-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px 12px; }
+.detail-form mat-form-field { width: 100%; font-size: 12px; }
+.detail-form input[readonly] { cursor: text; color: #465c6f; }
+.session-line { display: flex; align-items: baseline; gap: 12px; margin-top: 13px; padding-bottom: 13px; border-bottom: 1px solid #edf1f4; }
+.session-line > span:first-child { font-size: 10px; color: #9aa7b2; }
+.session-line .mono { font-size: 9px; color: #7e92a1; overflow-wrap: anywhere; }
+.detail-list { margin-top: 15px; }
+.list-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.list-heading h3 { margin: 0; color: #4c6477; font-weight: 600; font-size: 12px; overflow-wrap: anywhere; }
+.list-heading > span { font-size: 10px; color: #8da097; background: #edf5f0; padding: 3px 7px; border-radius: 4px; white-space: nowrap; }
+.list-path { font-size: 9px; color: #99a7b1; overflow-wrap: anywhere; margin: -3px 0 9px; }
+.no-details { font-size: 11px; color: #93a198; padding: 23px 12px; text-align: center; }
+pre { font-family: 'Cascadia Code', Consolas, monospace; background: #142235; color: #bdd8cd; font-size: 11px; line-height: 1.8; border-radius: 7px; padding: 17px; overflow: auto; max-height: 440px; tab-size: 2; }
+.json-note { font-size: 11px; color: #8d9caa; line-height: 1.7; margin: 0 0 12px; }
+.detail-error { padding: 30px 12px; text-align: center; color: #a37540; font-size: 12px; }
+.detail-error p { line-height: 1.7; }
+mat-dialog-actions { padding: 13px 22px !important; border-top: 1px solid #e9edf1; gap: 5px; }
+.footer-note { margin-right: auto; color: #91a397; font-size: 10px; display: flex; align-items: center; gap: 6px; }
+.footer-note app-icon { width: 13px; height: 13px; }
+mat-dialog-actions button { font-size: 11px; }
+@media (max-width: 560px) {
+  .detail-header { padding: 17px 15px 0; }
+  h2[mat-dialog-title] { font-size: 19px; }
+  .uid-row { margin-left: 15px; margin-right: 15px; }
+  mat-dialog-content { padding: 0 15px !important; }
+  .detail-form { gap: 15px 9px; }
+  .detail-form mat-form-field { font-size: 10px; }
+  .session-line { flex-wrap: wrap; gap: 5px; }
+  .footer-note { display: none; }
+  mat-dialog-actions { padding: 12px 15px !important; }
+}

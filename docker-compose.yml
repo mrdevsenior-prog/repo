@@ -1,0 +1,30 @@
+name: audit-query-monolith
+services:
+  mongodb:
+    image: mongo:8.0
+    ports:
+      - "127.0.0.1:27018:27017"
+    volumes:
+      - audit-query-demo:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand({ping:1}).ok ? 0 : 1)"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      SERVER_ADDRESS: 0.0.0.0
+      MONGODB_URI: mongodb://mongodb:27017/lineage_audit_demo?retryWrites=false&serverSelectionTimeoutMS=3000
+      MONGODB_DATABASE: lineage_audit_demo
+      MONGODB_COLLECTION: tapp_audit_events
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+volumes:
+  audit-query-demo:

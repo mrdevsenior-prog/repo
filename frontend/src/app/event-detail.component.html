@@ -1,0 +1,43 @@
+<header class="detail-header">
+  <div><div class="eyebrow">CONSULTA DE AUDITORÍA</div><h2 mat-dialog-title>Detalle del evento</h2></div>
+  <button mat-icon-button mat-dialog-close aria-label="Cerrar detalle"><app-icon name="close" /></button>
+</header>
+<div class="uid-row"><span class="mono" [title]="data.uid">{{ data.uid }}</span><button mat-icon-button (click)="copyUid()" matTooltip="Copiar identificador" aria-label="Copiar UID"><app-icon [name]="copied() ? 'check' : 'copy'" /></button></div>
+@if (copyError()) { <p class="copy-message" role="status">No se pudo copiar. Puedes seleccionar el identificador.</p> }
+@if (loading()) { <mat-progress-bar mode="indeterminate" aria-label="Cargando detalle" /> }
+
+<mat-dialog-content>
+  @if (error()) { <div class="detail-error" role="alert"><app-icon name="alert" /><p>{{ error() }}</p><button mat-stroked-button (click)="load()">Reintentar</button></div> }
+  @if (event()) {
+    <mat-tab-group animationDuration="0ms" dynamicHeight>
+      <mat-tab label="Detalle">
+        <div class="tab-content">
+          <p class="operation-description">{{ text('event_message.app_operation_description') }}</p>
+          <form class="detail-form" aria-label="Datos del evento" (submit)="$event.preventDefault()">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Usuario / cuenta</mat-label><input matInput readonly [value]="text('account_name')" [title]="text('account_name')" /></mat-form-field>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Aplicación</mat-label><input matInput readonly [value]="text('event_message.app_code')" /></mat-form-field>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Número de operación</mat-label><input matInput readonly [value]="text('event_message.operation_number')" [title]="text('event_message.operation_number')" /></mat-form-field>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Prioridad</mat-label><input matInput readonly [value]="text('event_priority')" /></mat-form-field>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Fecha del evento · Lima</mat-label><input matInput readonly [value]="(dateValue('event_timestamp') | date:'dd/MM/yyyy HH:mm:ss.SSS':'-0500') || 'Sin fecha'" /></mat-form-field>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Fecha del registro · Lima</mat-label><input matInput readonly [value]="(dateValue('log_timestamp') | date:'dd/MM/yyyy HH:mm:ss.SSS':'-0500') || 'Sin fecha'" /></mat-form-field>
+          </form>
+          <div class="session-line"><span>Sesión</span><span class="mono">{{ text('session_identifier') }}</span></div>
+
+          @for (list of lists(); track list.path) {
+            <section class="detail-list" [attr.aria-label]="list.label">
+              <div class="list-heading"><h3>{{ list.label }}</h3><span>{{ list.rows.length }} {{ list.rows.length === 1 ? 'registro' : 'registros' }}</span></div>
+              @if (lists().length > 1) { <p class="list-path mono">{{ list.path }}</p> }
+              <app-document-array-table [rows]="list.rows" [label]="list.label + ': ' + list.path" />
+            </section>
+          } @empty {
+            <div class="no-details">Este documento no contiene listas de detalle.</div>
+          }
+        </div>
+      </mat-tab>
+      <mat-tab label="Documento completo"><div class="tab-content"><p class="json-note">Todos los campos de MongoDB. Las listas se presentan en tablas.</p><app-document-tree [value]="event()" /></div></mat-tab>
+      <mat-tab label="JSON"><div class="tab-content"><p class="json-note">Documento completo. Las fechas y los identificadores se muestran como texto.</p><pre>{{ event() | json }}</pre></div></mat-tab>
+    </mat-tab-group>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end"><span class="footer-note"><app-icon name="shield" /> Solo lectura</span><button mat-button mat-dialog-close>Cerrar</button><button mat-flat-button (click)="download()" [disabled]="!event()"><app-icon name="download" /> Descargar JSON</button></mat-dialog-actions>

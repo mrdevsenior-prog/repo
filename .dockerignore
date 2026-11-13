@@ -1,0 +1,10 @@
+.git
+.gradle
+.tools
+.runtime
+.env
+build
+frontend/node_modules
+frontend/.angular
+frontend/dist
+*.zip

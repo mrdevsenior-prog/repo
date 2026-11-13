@@ -1,0 +1,60 @@
+<section class="dashboard" aria-label="Dashboard estadístico" [attr.aria-busy]="loading()">
+  <div class="section-heading"><div><span class="section-line"></span><h2>Análisis de actividad</h2><span class="section-caption">Tu operación, en perspectiva</span></div><button mat-button (click)="export()" [disabled]="loading() || !data()"><app-icon name="download" /> Exportar estadísticas</button></div>
+
+  @if (error()) {
+    <div class="dashboard-state" role="alert"><app-icon name="alert" /><h3>No se pudieron cargar las estadísticas</h3><p>{{ error() }}</p><button mat-stroked-button (click)="retry.emit()">Reintentar</button></div>
+  } @else if (!data()) {
+    <div class="chart-skeletons" aria-label="Cargando gráficos"><div></div><div></div><div></div><div></div></div>
+  } @else if (data()!.summary.total === 0) {
+    <div class="dashboard-state"><app-icon name="search" /><h3>No hay eventos para graficar</h3><p>Ajusta los filtros o selecciona otro periodo.</p></div>
+  } @else {
+    <div class="chart-grid" [class.refreshing]="loading()">
+      <article class="chart-card volume-card" aria-labelledby="volume-title">
+        <div class="chart-heading"><div><div class="chart-kicker">VOLUMEN DE AUDITORÍA</div><h3 id="volume-title">Eventos por día</h3><p>{{ dateLabel(data()!.rangeStart) }} — {{ dateLabel(data()!.rangeEnd) }} · {{ data()!.timezone }}</p></div><span class="chart-mark"><app-icon name="chart" /></span></div>
+        <div class="volume-chart">
+          <div class="y-axis" aria-hidden="true">@for (tick of ticks(); track tick.position) { <span [style.top.%]="tick.position">{{ tick.value | number:'1.0-1' }}</span> }</div>
+          <div class="volume-scroll" tabindex="0" aria-label="Desplazar gráfico de eventos por día"><div class="volume-canvas" [style.min-width.px]="daily().length * 36">
+            <div class="grid-lines" aria-hidden="true">@for (tick of ticks(); track tick.position) { <i [style.top.%]="tick.position"></i> }</div>
+            <div class="day-columns">@for (day of daily(); track day.key) {
+              <button class="day-column" [disabled]="loading()" (click)="daySelected.emit(day.key)" [attr.aria-label]="'Filtrar ' + dateLabel(day.key) + ': ' + day.count + ' eventos'" [matTooltip]="dateLabel(day.key) + ' · ' + day.count + ' eventos'">
+                <span class="bar-space"><span class="bar-count" [style.bottom.%]="day.count / axisMax() * 100">{{ day.count || '' }}</span><span class="bar-fill" [class.quiet]="!day.count" [style.height.%]="day.count / axisMax() * 100"></span></span><span class="day-label">{{ dateLabel(day.key) }}</span>
+              </button>
+            }</div>
+          </div></div>
+        </div>
+        <div class="chart-footnote"><span><i class="legend-dot green-dot"></i> Eventos registrados</span><span>Selecciona una barra para consultar ese día</span></div>
+        @if (data()!.undated) { <p class="data-note">{{ data()!.undated }} eventos sin fecha BSON válida no se incluyen en los gráficos temporales.</p> }
+        @if (daily().length > 90) { <p class="data-note">En periodos extensos se muestran los días con actividad.</p> }
+      </article>
+
+      <article class="chart-card priority-card" aria-labelledby="priority-title">
+        <div class="chart-heading"><div><div class="chart-kicker">DISTRIBUCIÓN</div><h3 id="priority-title">Prioridad de eventos</h3><p>Participación en el periodo seleccionado</p></div><span class="chart-mark amber-mark"><app-icon name="shield" /></span></div>
+        <div class="priority-content"><div class="donut"><svg viewBox="0 0 160 160" role="img" [attr.aria-label]="'Distribución de ' + data()!.summary.total + ' eventos por prioridad'"><circle cx="80" cy="80" r="54" fill="none" stroke="#eef3f1" stroke-width="17" />@for (segment of segments(); track segment.key) { <circle cx="80" cy="80" r="54" fill="none" [attr.stroke]="segment.color" stroke-width="17" [attr.stroke-dasharray]="segment.length + ' 339.292'" [attr.stroke-dashoffset]="-segment.offset" transform="rotate(-90 80 80)"><title>{{ priorityLabel(segment.key) }}: {{ segment.count }} eventos</title></circle> }</svg><div class="donut-total"><strong>{{ data()!.summary.total | number }}</strong><span>eventos</span></div></div>
+          <div class="priority-legend">@for (segment of segments(); track segment.key) { <button (click)="prioritySelected.emit(segment.key)" [disabled]="loading() || segment.key === 'Sin dato'" [attr.aria-label]="'Filtrar prioridad ' + priorityLabel(segment.key)"><i class="legend-dot" [style.background]="segment.color"></i><span>{{ priorityLabel(segment.key) }}</span><strong>{{ segment.count | number }}</strong><small>{{ segment.percentage | number:'1.0-1' }}%</small></button> }</div>
+        </div>
+        <div class="chart-footnote"><span>Selecciona una prioridad para filtrar</span></div>
+      </article>
+
+      <article class="chart-card apps-card" aria-labelledby="apps-title">
+        <div class="chart-heading"><div><div class="chart-kicker">APLICACIONES</div><h3 id="apps-title">¿Dónde se genera la actividad?</h3><p>Eventos por aplicación de origen</p></div><span class="chart-mark blue-mark"><app-icon name="grid" /></span></div>
+        <div class="rank-list">@for (application of data()!.applications; track application.key; let index = $index) {
+          <button class="rank-row" (click)="applicationSelected.emit(application.key)" [disabled]="loading() || application.key === 'Sin dato'" [attr.aria-label]="'Filtrar aplicación ' + application.key + ': ' + application.count + ' eventos'"><div class="rank-label"><span class="rank-number">{{ index + 1 < 10 ? '0' + (index + 1) : index + 1 }}</span><strong>{{ application.key }}</strong><span>{{ application.count | number }} <small>eventos</small></span><em>{{ share(application.count) | number:'1.0-1' }}%</em></div><div class="rank-track"><span [style.width.%]="application.count / maximum(data()!.applications) * 100" [style.background]="palette[index % palette.length]"></span></div></button>
+        }</div>
+        <div class="chart-footnote"><span>Selecciona una aplicación para explorar sus eventos</span></div>
+      </article>
+
+      <article class="chart-card actions-card" aria-labelledby="actions-title">
+        <div class="chart-heading"><div><div class="chart-kicker">OPERACIONES</div><h3 id="actions-title">Acciones registradas</h3><p>Composición de la actividad auditada</p></div><span class="chart-mark"><app-icon name="activity" /></span></div>
+        <div class="action-list">@for (action of data()!.actions; track action.key; let index = $index) {
+          <div class="action-row"><span class="action-label" [matTooltip]="action.key">{{ actionLabel(action.key) }}</span><div class="action-track"><span [style.width.%]="action.count / maximum(data()!.actions) * 100" [style.background]="palette[(index + 1) % palette.length]"></span></div><strong>{{ action.count | number }}</strong><small>{{ share(action.count) | number:'1.0-1' }}%</small></div>
+        }</div>
+        <div class="chart-footnote"><span>Conteos calculados sobre todos los eventos filtrados</span></div>
+      </article>
+
+      <article class="chart-card hours-card" aria-labelledby="hours-title"><div class="chart-heading"><div><div class="chart-kicker">PATRÓN HORARIO</div><h3 id="hours-title">Actividad durante el día</h3><p>Distribución acumulada por hora · {{ data()!.timezone }}</p></div><span class="peak-badge"><app-icon name="clock" /> @if (peak().count) { Mayor actividad: {{ peak().key }}:00 } @else { Sin fechas válidas }</span></div>
+        <div class="hours-chart" role="group" aria-label="Eventos por hora">@for (hour of hours(); track hour.key) { <div class="hour-column" tabindex="0" [attr.aria-label]="hour.key + ':00 · ' + hour.count + ' eventos'" [matTooltip]="hour.key + ':00 – ' + hour.key + ':59 · ' + hour.count + ' eventos'"><div class="hour-space"><span [class.peak-hour]="hour.count && hour.key === peak().key" [style.height.%]="hour.count / maximum(hours()) * 100"></span></div><small>{{ hour.key }}</small></div> }</div>
+        <div class="chart-footnote"><span>00:00</span><span>Cada barra representa una hora del periodo seleccionado</span><span>23:59</span></div>
+      </article>
+    </div>
+  }
+</section>
