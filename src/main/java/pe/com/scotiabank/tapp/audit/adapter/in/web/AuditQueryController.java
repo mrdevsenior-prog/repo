@@ -5,9 +5,17 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import pe.com.scotiabank.tapp.audit.application.port.in.AuditQueryUseCase;
-import pe.com.scotiabank.tapp.audit.domain.*;
+import pe.com.scotiabank.tapp.audit.domain.AuditAnalytics;
+import pe.com.scotiabank.tapp.audit.domain.AuditCatalogs;
+import pe.com.scotiabank.tapp.audit.domain.AuditPage;
+import pe.com.scotiabank.tapp.audit.domain.AuditSearch;
+import pe.com.scotiabank.tapp.audit.domain.AuditSummary;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -98,7 +106,9 @@ public class AuditQueryController {
   }
 
   private static Instant parse(String value) {
-    if (value == null || value.isBlank()) return null;
+    if (value == null || value.isBlank()) {
+      return null;
+    }
     try {
       return OffsetDateTime.parse(value).toInstant();
     } catch (DateTimeParseException exception) {

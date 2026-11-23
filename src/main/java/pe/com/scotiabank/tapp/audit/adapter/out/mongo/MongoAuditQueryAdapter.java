@@ -1,6 +1,11 @@
 package pe.com.scotiabank.tapp.audit.adapter.out.mongo;
 
-import static com.mongodb.client.model.Filters.*;
+import static com.mongodb.client.model.Filters.and;
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.gte;
+import static com.mongodb.client.model.Filters.lt;
+import static com.mongodb.client.model.Filters.or;
+import static com.mongodb.client.model.Filters.regex;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.CountOptions;
@@ -8,7 +13,15 @@ import com.mongodb.client.model.Projections;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import org.bson.Document;
@@ -19,7 +32,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Repository;
 import pe.com.scotiabank.tapp.audit.application.port.out.AuditQueryPort;
-import pe.com.scotiabank.tapp.audit.domain.*;
+import pe.com.scotiabank.tapp.audit.domain.AuditAnalytics;
+import pe.com.scotiabank.tapp.audit.domain.AuditCatalogs;
+import pe.com.scotiabank.tapp.audit.domain.AuditEvent;
+import pe.com.scotiabank.tapp.audit.domain.AuditPage;
+import pe.com.scotiabank.tapp.audit.domain.AuditSearch;
+import pe.com.scotiabank.tapp.audit.domain.AuditSummary;
 
 @Repository
 public class MongoAuditQueryAdapter implements AuditQueryPort {
@@ -231,7 +249,9 @@ public class MongoAuditQueryAdapter implements AuditQueryPort {
   }
 
   private static List<AuditAnalytics.Bucket> buckets(Document result, String name) {
-    if (result == null) return List.of();
+    if (result == null) {
+      return List.of();
+    }
     List<Document> rows = result.getList(name, Document.class);
     return rows == null
         ? List.of()
@@ -286,11 +306,18 @@ public class MongoAuditQueryAdapter implements AuditQueryPort {
                   .map(field -> regex(field, literal, "i"))
                   .toList()));
     }
-    if (!search.application().isEmpty())
+    if (!search.application().isEmpty()) {
       conditions.add(eq("event_message.app_code", search.application()));
-    if (!search.priority().isEmpty()) conditions.add(eq("event_priority", search.priority()));
-    if (search.from() != null) conditions.add(gte("event_timestamp", Date.from(search.from())));
-    if (search.to() != null) conditions.add(lt("event_timestamp", Date.from(search.to())));
+    }
+    if (!search.priority().isEmpty()) {
+      conditions.add(eq("event_priority", search.priority()));
+    }
+    if (search.from() != null) {
+      conditions.add(gte("event_timestamp", Date.from(search.from())));
+    }
+    if (search.to() != null) {
+      conditions.add(lt("event_timestamp", Date.from(search.to())));
+    }
     return conditions.isEmpty() ? new Document() : and(conditions);
   }
 
@@ -315,13 +342,19 @@ public class MongoAuditQueryAdapter implements AuditQueryPort {
   }
 
   private static Instant instant(Object value) {
-    if (value instanceof Date date) return date.toInstant();
-    if (value instanceof Instant timestamp) return timestamp;
+    if (value instanceof Date date) {
+      return date.toInstant();
+    }
+    if (value instanceof Instant timestamp) {
+      return timestamp;
+    }
     return null;
   }
 
   private static long countFacet(Document result, String key) {
-    if (result == null) return 0;
+    if (result == null) {
+      return 0;
+    }
     List<Document> values = result.getList(key, Document.class);
     return values == null || values.isEmpty()
         ? 0
@@ -335,16 +368,26 @@ public class MongoAuditQueryAdapter implements AuditQueryPort {
   }
 
   private Object jsonValue(Object value) {
-    if (value instanceof ObjectId id) return id.toHexString();
-    if (value instanceof Date date) return date.toInstant().toString();
-    if (value instanceof Decimal128 decimal) return decimal.toString();
+    if (value instanceof ObjectId id) {
+      return id.toHexString();
+    }
+    if (value instanceof Date date) {
+      return date.toInstant().toString();
+    }
+    if (value instanceof Decimal128 decimal) {
+      return decimal.toString();
+    }
     if (value instanceof Map<?, ?> map) {
       Map<String, Object> output = new LinkedHashMap<>();
       map.forEach((key, item) -> output.put(key.toString(), jsonValue(item)));
       return output;
     }
-    if (value instanceof List<?> list) return list.stream().map(this::jsonValue).toList();
-    if (value instanceof byte[] bytes) return Base64.getEncoder().encodeToString(bytes);
+    if (value instanceof List<?> list) {
+      return list.stream().map(this::jsonValue).toList();
+    }
+    if (value instanceof byte[] bytes) {
+      return Base64.getEncoder().encodeToString(bytes);
+    }
     return value;
   }
 }

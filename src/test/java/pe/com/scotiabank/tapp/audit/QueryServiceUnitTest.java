@@ -1,16 +1,29 @@
 package pe.com.scotiabank.tapp.audit;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import pe.com.scotiabank.tapp.audit.application.port.out.AuditQueryPort;
 import pe.com.scotiabank.tapp.audit.application.service.AuditQueryService;
-import pe.com.scotiabank.tapp.audit.domain.*;
+import pe.com.scotiabank.tapp.audit.domain.AuditAnalytics;
+import pe.com.scotiabank.tapp.audit.domain.AuditCatalogs;
+import pe.com.scotiabank.tapp.audit.domain.AuditPage;
+import pe.com.scotiabank.tapp.audit.domain.AuditSearch;
+import pe.com.scotiabank.tapp.audit.domain.AuditSummary;
 
 class QueryServiceUnitTest {
   private final AuditQueryPort port = mock(AuditQueryPort.class);
@@ -81,7 +94,7 @@ class QueryServiceUnitTest {
     AuditCatalogs catalogs = new AuditCatalogs(values, values);
     ArrayList<AuditAnalytics.Bucket> buckets =
         new ArrayList<>(List.of(new AuditAnalytics.Bucket("day", 1)));
-    AuditAnalytics analytics =
+    final AuditAnalytics analytics =
         new AuditAnalytics(
             new AuditSummary(1, 1, 0, 0),
             buckets,

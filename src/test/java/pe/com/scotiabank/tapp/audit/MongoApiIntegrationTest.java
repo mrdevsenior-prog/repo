@@ -1,6 +1,10 @@
 package pe.com.scotiabank.tapp.audit;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
 import java.net.URLEncoder;
@@ -12,10 +16,15 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -66,7 +75,9 @@ class MongoApiIntegrationTest {
 
   @AfterAll
   void cleanIsolatedDatabase() {
-    if (mongo.getDb().getName().equals(DATABASE)) mongo.getDb().drop();
+    if (mongo.getDb().getName().equals(DATABASE)) {
+      mongo.getDb().drop();
+    }
   }
 
   @Test
@@ -223,7 +234,8 @@ class MongoApiIntegrationTest {
   void analyticsUsesTheSameCombinedFiltersAsTheEventList() throws Exception {
     Document analytics =
         json(
-            "/analytics?application=TAPP&priority=HIGH&q=OP-001&from=2026-11-13T05:00:00Z&to=2026-11-14T05:00:00Z");
+            "/analytics?application=TAPP&priority=HIGH&q=OP-001"
+                + "&from=2026-11-13T05:00:00Z&to=2026-11-14T05:00:00Z");
     assertEquals(1, analytics.get("summary", Document.class).getInteger("total"));
     assertEquals(
         List.of(new Document("key", "TAPP").append("count", 1)),

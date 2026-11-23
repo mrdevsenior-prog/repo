@@ -1,6 +1,7 @@
 package pe.com.scotiabank.tapp.audit.adapter.in.web.error;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.util.NoSuchElementException;
 import org.junit.jupiter.api.Test;

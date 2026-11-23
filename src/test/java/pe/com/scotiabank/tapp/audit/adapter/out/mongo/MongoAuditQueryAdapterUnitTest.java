@@ -1,25 +1,56 @@
 package pe.com.scotiabank.tapp.audit.adapter.out.mongo;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.RETURNS_SELF;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.mongodb.Function;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoException;
-import com.mongodb.client.*;
+import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.DistinctIterable;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.CountOptions;
-import java.time.*;
-import java.util.*;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import org.bson.*;
+import org.bson.BsonArray;
+import org.bson.BsonDocument;
+import org.bson.BsonRegularExpression;
+import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.bson.types.*;
+import org.bson.types.Decimal128;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import pe.com.scotiabank.tapp.audit.domain.*;
+import pe.com.scotiabank.tapp.audit.domain.AuditAnalytics;
+import pe.com.scotiabank.tapp.audit.domain.AuditCatalogs;
+import pe.com.scotiabank.tapp.audit.domain.AuditEvent;
+import pe.com.scotiabank.tapp.audit.domain.AuditPage;
+import pe.com.scotiabank.tapp.audit.domain.AuditSearch;
+import pe.com.scotiabank.tapp.audit.domain.AuditSummary;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 class MongoAuditQueryAdapterUnitTest {
@@ -59,7 +90,7 @@ class MongoAuditQueryAdapterUnitTest {
   }
 
   @Test
-  void pagesAndProjectsTheStoredDocumentWithStableDescendingSortAndAQueryTimeout() {
+  void pagesAndProjectsTheStoredDocumentWithStableDescendingSortAndQueryTimeout() {
     Instant timestamp = Instant.parse("2026-11-13T16:00:00Z");
     rows.add(
         new Document("uid", "u1")
@@ -272,7 +303,7 @@ class MongoAuditQueryAdapterUnitTest {
   }
 
   @Test
-  void healthUsesARealPingCommandAndPropagatesStorageFailures() {
+  void healthUsesRealPingCommandAndPropagatesStorageFailures() {
     MongoDatabase database = mock(MongoDatabase.class);
     when(mongo.getDb()).thenReturn(database);
     adapter.checkConnection();

@@ -4,7 +4,11 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import pe.com.scotiabank.tapp.audit.application.port.in.AuditQueryUseCase;
 import pe.com.scotiabank.tapp.audit.application.port.out.AuditQueryPort;
-import pe.com.scotiabank.tapp.audit.domain.*;
+import pe.com.scotiabank.tapp.audit.domain.AuditAnalytics;
+import pe.com.scotiabank.tapp.audit.domain.AuditCatalogs;
+import pe.com.scotiabank.tapp.audit.domain.AuditPage;
+import pe.com.scotiabank.tapp.audit.domain.AuditSearch;
+import pe.com.scotiabank.tapp.audit.domain.AuditSummary;
 
 public final class AuditQueryService implements AuditQueryUseCase {
   private final AuditQueryPort queries;

@@ -1,12 +1,15 @@
 package pe.com.scotiabank.tapp.audit.bootstrap;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import pe.com.scotiabank.tapp.audit.application.model.AuditSubmission;
 import pe.com.scotiabank.tapp.audit.application.port.out.SendAuditPort;
-import pe.com.scotiabank.tapp.audit.domain.model.*;
+import pe.com.scotiabank.tapp.audit.domain.model.AuditContext;
+import pe.com.scotiabank.tapp.audit.domain.model.AuditEvent;
+import pe.com.scotiabank.tapp.audit.domain.model.AuditResult;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 

@@ -7,7 +7,7 @@ import org.springframework.boot.SpringApplication;
 
 class ApplicationEntryPointUnitTest {
   @Test
-  void theSingleEntryPointDelegatesItsArgumentsWithoutStartingAServerInUnitTests() {
+  void theSingleEntryPointDelegatesItsArgumentsWithoutStartingTheServerInUnitTests() {
     String[] arguments = {"--server.port=0"};
     try (var spring = mockStatic(SpringApplication.class)) {
       new AuditApplication();

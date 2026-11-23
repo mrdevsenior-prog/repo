@@ -1,17 +1,23 @@
 package pe.com.scotiabank.tapp.audit.adapter.in.web.error;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.core.MethodParameter;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -46,8 +52,11 @@ class ReactiveExceptionHandlerUnitTest {
               assertEquals(expected, response.getStatusCode().value());
               ProblemDetail body = (ProblemDetail) response.getBody();
               assertEquals("Mensaje público", body.getDetail());
-              if (upstream == null) assertNull(body.getProperties());
-              else assertEquals(upstream, body.getProperties().get("upstream_status"));
+              if (upstream == null) {
+                assertNull(body.getProperties());
+              } else {
+                assertEquals(upstream, body.getProperties().get("upstream_status"));
+              }
               assertFalse(body.toString().contains("private-provider-data"));
             })
         .expectComplete()

@@ -1,19 +1,32 @@
 package pe.com.scotiabank.tapp.audit.adapter.in.web;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import pe.com.scotiabank.tapp.audit.application.port.in.AuditQueryUseCase;
-import pe.com.scotiabank.tapp.audit.domain.*;
+import pe.com.scotiabank.tapp.audit.domain.AuditAnalytics;
+import pe.com.scotiabank.tapp.audit.domain.AuditCatalogs;
+import pe.com.scotiabank.tapp.audit.domain.AuditPage;
+import pe.com.scotiabank.tapp.audit.domain.AuditSearch;
+import pe.com.scotiabank.tapp.audit.domain.AuditSummary;
 
 class QueryControllerUnitTest {
   private final AuditQueryUseCase useCase = mock(AuditQueryUseCase.class);
@@ -96,7 +109,7 @@ class QueryControllerUnitTest {
   }
 
   @Test
-  void returnsDetailsCatalogsAndTheResultOfAConnectionCheck() {
+  void returnsDetailsCatalogsAndConnectionStatus() {
     Map<String, Object> detail = Map.of("uid", "u1");
     AuditCatalogs catalogs = new AuditCatalogs(List.of("TAPP"), List.of("HIGH"));
     when(useCase.detail("u1")).thenReturn(detail);

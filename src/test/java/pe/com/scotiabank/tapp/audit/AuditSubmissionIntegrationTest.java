@@ -1,21 +1,33 @@
 package pe.com.scotiabank.tapp.audit;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.net.http.*;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.*;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
@@ -28,7 +40,8 @@ import tools.jackson.databind.node.ObjectNode;
     classes = AuditApplication.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties =
-        "spring.mongodb.uri=mongodb://127.0.0.1:1/?serverSelectionTimeoutMS=100&connectTimeoutMS=100")
+        "spring.mongodb.uri=mongodb://127.0.0.1:1/"
+            + "?serverSelectionTimeoutMS=100&connectTimeoutMS=100")
 class AuditSubmissionIntegrationTest {
   private static final String PATH = "/api/v1/audit/security/log";
   private static final String SUCCESS = "{\"data\":[{\"status\":\"OK\"}]}";
@@ -117,8 +130,11 @@ class AuditSubmissionIntegrationTest {
   void rejectsMissingAndBlankHeadersWithoutCallingTheProducer(String name, String value)
       throws Exception {
     Map<String, String> headers = new HashMap<>(HEADERS);
-    if (value == null) headers.remove(name);
-    else headers.put(name, value);
+    if (value == null) {
+      headers.remove(name);
+    } else {
+      headers.put(name, value);
+    }
     assertEquals(400, post(FIXTURE, headers).statusCode());
     assertEquals(0, CALLS.get());
   }
@@ -142,7 +158,9 @@ class AuditSubmissionIntegrationTest {
       case "empty-detail" ->
           ((ObjectNode) body.path("event_message").path("channel_payload_detail").get(0))
               .put("key", "");
-      default -> {}
+      default -> {
+        // El caso malformed se construye después del switch.
+      }
     }
     String json = kind.equals("malformed") ? "{private-input" : mapper.writeValueAsString(body);
     HttpResponse<String> response = post(json, HEADERS);
@@ -247,16 +265,23 @@ class AuditSubmissionIntegrationTest {
                     new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8)));
             CALLS.incrementAndGet();
             try {
-              if (reply.delayMillis() > 0) Thread.sleep(reply.delayMillis());
-              if (reply.status() == 0) return;
+              if (reply.delayMillis() > 0) {
+                Thread.sleep(reply.delayMillis());
+              }
+              if (reply.status() == 0) {
+                return;
+              }
               exchange.getResponseHeaders().set("Content-Type", "application/json");
-              if (reply.status() == 302)
+              if (reply.status() == 302) {
                 exchange
                     .getResponseHeaders()
                     .set("Location", "http://127.0.0.1:" + server.getAddress().getPort() + PATH);
+              }
               byte[] bytes = reply.body().getBytes(StandardCharsets.UTF_8);
               exchange.sendResponseHeaders(reply.status(), bytes.length == 0 ? -1 : bytes.length);
-              if (bytes.length > 0) exchange.getResponseBody().write(bytes);
+              if (bytes.length > 0) {
+                exchange.getResponseBody().write(bytes);
+              }
             } catch (InterruptedException exception) {
               Thread.currentThread().interrupt();
             } finally {

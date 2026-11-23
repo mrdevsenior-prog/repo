@@ -1,16 +1,27 @@
 package pe.com.scotiabank.tapp.audit;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
 
 import jakarta.validation.Validator;
-import java.net.*;
+import java.net.SocketTimeoutException;
+import java.net.URI;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
-import org.springframework.http.*;
-import org.springframework.web.reactive.function.client.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.ExchangeFunction;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import pe.com.scotiabank.tapp.audit.adapter.in.web.dto.AuditLogRequest;
 import pe.com.scotiabank.tapp.audit.adapter.in.web.mapper.AuditWebMapper;
 import pe.com.scotiabank.tapp.audit.adapter.out.http.AuditApiClient;

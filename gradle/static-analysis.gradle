@@ -33,8 +33,8 @@ tasks.withType(Pmd).configureEach {
     }
 }
 
-// Preserve the original sender's static-analysis scope after merging its sources.
-// Unit coverage and architecture checks still include the entire backend.
+// Checkstyle validates all backend sources and tests using the default source sets.
+// Preserve the original sender's PMD scope after merging its sources.
 def senderMain = fileTree('src/main/java') {
     include '**/AuditApplication.java', '**/adapter/common/**', '**/adapter/in/web/dto/**',
             '**/adapter/in/web/mapper/**', '**/adapter/in/web/AuditSubmissionController.java',
@@ -47,7 +47,5 @@ def senderTests = fileTree('src/test/java') {
     include '**/AuditApiClientTest.java', '**/AuditCollectionCopiesTest.java', '**/AuditConsumerIntegrationTest.java',
             '**/AuditMappersTest.java', '**/HexagonalArchitectureTest.java', '**/SubmitAuditServiceTest.java'
 }
-tasks.named('checkstyleMain') { source = senderMain }
 tasks.named('pmdMain') { source = senderMain }
-tasks.named('checkstyleTest') { source = senderTests }
 tasks.named('pmdTest') { source = senderTests }
